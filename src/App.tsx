@@ -8,7 +8,10 @@ export default function App() {
     const [workflowItems, setWorkflowItems] = useState<Workflow[]>(workflows);
     const [connections, setConnections] = useState<WorkflowConnection[]>([]);
     const [selectedWorkflowId, setSelectedWorkflowId] = useState<number | null>(null);
-    const completionTimersRef = useRef<Record<number, ReturnType<typeof window.setTimeout>>>({});
+    const [startWorkflowId, setStartWorkflowId] = useState<number | null>(null);
+    const [isRunning, setIsRunning] = useState(false);
+    const runTimerRef = useRef<ReturnType<typeof window.setTimeout> | null>(null);
+    const runTokenRef = useRef(0);
 
     const selectedWorkflow = useMemo(
         () => workflowItems.find((workflow) => workflow.id === selectedWorkflowId) ?? null,
@@ -16,10 +19,11 @@ export default function App() {
     );
 
     useEffect(() => {
-        const completionTimers = completionTimersRef.current;
-
         return () => {
-            Object.values(completionTimers).forEach(window.clearTimeout);
+            if (runTimerRef.current) {
+                window.clearTimeout(runTimerRef.current);
+            }
+            runTokenRef.current += 1;
         };
     }, []);
 
@@ -28,30 +32,116 @@ export default function App() {
     };
 
     const handleRetryWorkflow = (workflowId: number) => {
-        setWorkflowItems((currentWorkflows) =>
-            currentWorkflows.map((workflow) =>
-                workflow.id === workflowId
-                    ? { ...workflow, status: 'running' }
-                    : workflow,
-            ),
-        );
+        handleRunWorkflow(startWorkflowId ?? workflowId);
+    };
 
-        if (completionTimersRef.current[workflowId]) {
-            window.clearTimeout(completionTimersRef.current[workflowId]);
+    const getExecutionOrder = (startId: number) => {
+        const reachable = new Set<number>();
+        const pending = [startId];
+
+        while (pending.length > 0) {
+            const workflowId = pending.shift();
+            if (workflowId === undefined || reachable.has(workflowId)) {
+                continue;
+            }
+
+            reachable.add(workflowId);
+            connections
+                .filter((connection) => connection.source === workflowId)
+                .forEach((connection) => pending.push(connection.target));
         }
 
-        completionTimersRef.current[workflowId] = window.setTimeout(() => {
+        const startWorkflow = workflowItems.find(
+            (workflow) => workflow.id === startId,
+        );
+        const remainingWorkflows = workflowItems
+            .filter(
+                (workflow) =>
+                    reachable.has(workflow.id) && workflow.id !== startId,
+            )
+            .sort((left, right) => left.x - right.x || left.y - right.y);
+
+        return startWorkflow
+            ? [startWorkflow, ...remainingWorkflows]
+            : remainingWorkflows;
+    };
+
+    function handleRunWorkflow(requestedStartId: number | null) {
+        if (requestedStartId === null || isRunning) {
+            return;
+        }
+
+        if (runTimerRef.current) {
+            window.clearTimeout(runTimerRef.current);
+        }
+
+        const runToken = runTokenRef.current + 1;
+        runTokenRef.current = runToken;
+        const executionOrder = getExecutionOrder(requestedStartId);
+
+        if (executionOrder.length === 0) {
+            return;
+        }
+
+        setIsRunning(true);
+        setWorkflowItems((currentWorkflows) =>
+            currentWorkflows.map((workflow) => ({
+                ...workflow,
+                status: undefined,
+                startedAt: 'Not started',
+                duration: 0,
+            })),
+        );
+
+        const runNextWorkflow = (index: number) => {
+            if (runTokenRef.current !== runToken) {
+                return;
+            }
+
+            const workflow = executionOrder[index];
+            const duration = Math.floor(Math.random() * 9) + 2;
+
             setWorkflowItems((currentWorkflows) =>
-                currentWorkflows.map((workflow) =>
-                    workflow.id === workflowId
-                        ? { ...workflow, status: 'completed' }
-                        : workflow,
+                currentWorkflows.map((currentWorkflow) =>
+                    currentWorkflow.id === workflow.id
+                        ? {
+                              ...currentWorkflow,
+                              status: 'running',
+                              startedAt: new Date().toLocaleTimeString(),
+                              duration,
+                          }
+                        : currentWorkflow,
                 ),
             );
 
-            delete completionTimersRef.current[workflowId];
-        }, 1200);
-    };
+            runTimerRef.current = window.setTimeout(() => {
+                if (runTokenRef.current !== runToken) {
+                    return;
+                }
+
+                const failed = Math.random() < 0.1;
+                setWorkflowItems((currentWorkflows) =>
+                    currentWorkflows.map((currentWorkflow) =>
+                        currentWorkflow.id === workflow.id
+                            ? {
+                                  ...currentWorkflow,
+                                  status: failed ? 'failed' : 'completed',
+                              }
+                            : currentWorkflow,
+                    ),
+                );
+
+                if (failed || index === executionOrder.length - 1) {
+                    setIsRunning(false);
+                    return;
+                }
+
+                runNextWorkflow(index + 1);
+            }, duration * 1000);
+        };
+
+        runNextWorkflow(0);
+    }
 
     const handleMoveWorkflow = (
         workflowId: number,
@@ -78,7 +168,6 @@ export default function App() {
             const newWorkflow: Workflow = {
                 id: nextId,
                 name: `New workflow ${nextId}`,
-                status: 'queued',
                 description: 'A new workflow.',
                 startedAt: 'Not started',
                 duration: 0,
@@ -121,15 +210,25 @@ export default function App() {
         <main>
             <h1>Workflow Dashboard</h1>
 
-            <button type="button" onClick={handleCreateWorkflow}>
-                Add Node
-            </button>
+            <div className="workflow-actions">
+                <button
+                    type="button"
+                    onClick={() => handleRunWorkflow(startWorkflowId)}
+                    disabled={isRunning || startWorkflowId === null}
+                >
+                    {isRunning ? 'Running...' : 'Run'}
+                </button>
+                <button type="button" onClick={handleCreateWorkflow}>
+                    Add Node
+                </button>
+            </div>
 
             <div className="dashboard">
                 <WorkflowCanvas
                     workflows={workflowItems}
                     connections={connections}
                     selectedWorkflowId={selectedWorkflowId}
+                    startWorkflowId={startWorkflowId}
                     onSelectWorkflow={handleSelectWorkflow}
                     onMoveWorkflow={handleMoveWorkflow}
                     onConnectWorkflows={handleConnectWorkflows}
@@ -139,6 +238,8 @@ export default function App() {
                     <ExecutionDetails
                         workflow={selectedWorkflow}
                         onRetryWorkflow={handleRetryWorkflow}
+                        isStartNode={selectedWorkflow.id === startWorkflowId}
+                        onSetStartNode={setStartWorkflowId}
                     />
                 ) : (
                     <p>Select a workflow to view its details.</p>

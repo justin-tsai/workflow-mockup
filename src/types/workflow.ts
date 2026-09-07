@@ -1,4 +1,5 @@
 export type WorkflowStatus =
+    | 'idle'
     | 'queued'
     | 'running'
     | 'completed'
@@ -7,7 +8,7 @@ export type WorkflowStatus =
 export type Workflow = {
     id: number;
     name: string;
-    status: WorkflowStatus;
+    status?: WorkflowStatus;
     description: string;
     duration: number;
     startedAt: string;

@@ -231,6 +231,40 @@
   box-shadow: 0 0 0 2px rgb(37 99 235 / 20%);
 }
 
+.workflow-node-running {
+  border-color: #d97706;
+  background-color: #fffbeb;
+}
+
+.workflow-node-completed {
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+}
+
+.workflow-node-failed {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.workflow-node-start {
+}
+
+.workflow-node-start::before {
+  content: 'START';
+  position: absolute;
+  top: -10px;
+  left: 12px;
+  padding: 2px 6px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+}
+
 .workflow-handle {
   position: absolute;
   top: 50%;

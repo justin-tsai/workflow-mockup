@@ -17,6 +17,7 @@ import type { Workflow, WorkflowConnection } from '../types/workflow';
 
 type WorkflowNodeData = {
     workflow: Workflow;
+    isStart: boolean;
 };
 
 type WorkflowNode = Node<WorkflowNodeData, 'workflow'>;
@@ -25,17 +26,22 @@ type WorkflowCanvasProps = {
     workflows: Workflow[];
     connections: WorkflowConnection[];
     selectedWorkflowId: number | null;
+    startWorkflowId: number | null;
     onSelectWorkflow: (workflow: Workflow) => void;
     onMoveWorkflow: (workflowId: number, x: number, y: number) => void;
     onConnectWorkflows: (source: number, target: number) => void;
 };
 
 function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
+    const statusClass = data.workflow.status
+        ? `workflow-node-${data.workflow.status}`
+        : '';
+
     return (
         <div
             className={`workflow-node ${
                 selected ? 'workflow-node-selected' : ''
-            }`}
+            } ${data.isStart ? 'workflow-node-start' : ''} ${statusClass}`}
         >
             <Handle
                 type="target"
@@ -44,7 +50,7 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
                 aria-label={`Connect into ${data.workflow.name}`}
             />
             <strong>{data.workflow.name}</strong>
-            <span>{data.workflow.status}</span>
+            {data.workflow.status && <span>{data.workflow.status}</span>}
             <Handle
                 type="source"
                 position={Position.Right}
@@ -63,6 +69,7 @@ export default function WorkflowCanvas({
     workflows,
     connections,
     selectedWorkflowId,
+    startWorkflowId,
     onSelectWorkflow,
     onMoveWorkflow,
     onConnectWorkflows,
@@ -73,10 +80,13 @@ export default function WorkflowCanvas({
                 id: String(workflow.id),
                 type: 'workflow',
                 position: { x: workflow.x, y: workflow.y },
-                data: { workflow },
+                data: {
+                    workflow,
+                    isStart: workflow.id === startWorkflowId,
+                },
                 selected: workflow.id === selectedWorkflowId,
             })),
-        [selectedWorkflowId, workflows],
+        [selectedWorkflowId, startWorkflowId, workflows],
     );
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 

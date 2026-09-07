@@ -6,11 +6,15 @@ import type { Workflow } from '../types/workflow';
 type ExecutionDetailsProps = {
     workflow: Workflow;
     onRetryWorkflow: (workflowId: number) => void;
+    isStartNode: boolean;
+    onSetStartNode: (workflowId: number) => void;
 };
 
 export default function ExecutionDetails({
                                              workflow,
                                              onRetryWorkflow,
+                                             isStartNode,
+                                             onSetStartNode,
                                          }: ExecutionDetailsProps) {
     return (
         <section className="execution-details">
@@ -20,7 +24,16 @@ export default function ExecutionDetails({
                     <h2>{workflow.name}</h2>
                 </div>
 
-                <StatusBadge status={workflow.status} />
+                <div className="execution-details__actions">
+                    <StatusBadge status={workflow.status} />
+                    <button
+                        type="button"
+                        className="start-node-button"
+                        onClick={() => onSetStartNode(workflow.id)}
+                    >
+                        {isStartNode ? 'Start node' : 'Set as start node'}
+                    </button>
+                </div>
             </div>
 
             <dl>

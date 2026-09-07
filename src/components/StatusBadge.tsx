@@ -1,10 +1,14 @@
 import type { WorkflowStatus } from '../types/workflow';
 
 type StatusBadgeProps = {
-    status: WorkflowStatus;
+    status?: WorkflowStatus;
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {
+    if (!status) {
+        return null;
+    }
+
     return (
         <span className={`status-badge status-badge--${status}`}>
       {status}
