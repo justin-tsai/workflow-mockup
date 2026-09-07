@@ -185,7 +185,8 @@
 
 .workflow-canvas {
   position: relative;
-  min-height: 600px;
+  width: 100%;
+  min-height: 700px;
   overflow: hidden;
   background-color: #f4f5f7;
   border: 1px solid #d9dce1;
