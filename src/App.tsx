@@ -67,9 +67,36 @@ export default function App() {
         );
     };
 
+    const handleCreateWorkflow = () => {
+        setWorkflowItems((currentWorkflows) => {
+            const nextId =
+                Math.max(
+                    0,
+                    ...currentWorkflows.map((workflow) => workflow.id),
+                ) + 1;
+
+            const newWorkflow: Workflow = {
+                id: nextId,
+                name: `New workflow ${nextId}`,
+                status: 'queued',
+                description: 'A new workflow.',
+                startedAt: 'Not started',
+                duration: 0,
+                x: 100 + currentWorkflows.length * 30,
+                y: 100 + currentWorkflows.length * 30,
+            };
+
+            return [...currentWorkflows, newWorkflow];
+        });
+    };
+
     return (
         <main>
             <h1>Workflow Dashboard</h1>
+
+            <button type="button" onClick={handleCreateWorkflow}>
+                Add Node
+            </button>
 
             <div className="dashboard">
                 <WorkflowCanvas
