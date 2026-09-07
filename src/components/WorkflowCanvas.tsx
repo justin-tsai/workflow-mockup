@@ -1,83 +1,146 @@
-import type { PointerEvent } from 'react';
-import type { Workflow } from '../types/workflow';
+import {
+    Background,
+    Controls,
+    Handle,
+    MarkerType,
+    Position,
+    ReactFlow,
+    useNodesState,
+    type Connection,
+    type Edge,
+    type Node,
+    type NodeProps,
+    type NodeTypes,
+} from '@xyflow/react';
+import { useEffect, useMemo } from 'react';
+import type { Workflow, WorkflowConnection } from '../types/workflow';
+
+type WorkflowNodeData = {
+    workflow: Workflow;
+};
+
+type WorkflowNode = Node<WorkflowNodeData, 'workflow'>;
 
 type WorkflowCanvasProps = {
     workflows: Workflow[];
+    connections: WorkflowConnection[];
     selectedWorkflowId: number | null;
     onSelectWorkflow: (workflow: Workflow) => void;
-    onMoveWorkflow: (
-        workflowId: number,
-        x: number,
-        y: number,
-    ) => void;
+    onMoveWorkflow: (workflowId: number, x: number, y: number) => void;
+    onConnectWorkflows: (source: number, target: number) => void;
+};
+
+function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
+    return (
+        <div
+            className={`workflow-node ${
+                selected ? 'workflow-node-selected' : ''
+            }`}
+        >
+            <Handle
+                type="target"
+                position={Position.Left}
+                className="workflow-handle workflow-handle-input"
+                aria-label={`Connect into ${data.workflow.name}`}
+            />
+            <strong>{data.workflow.name}</strong>
+            <span>{data.workflow.status}</span>
+            <Handle
+                type="source"
+                position={Position.Right}
+                className="workflow-handle workflow-handle-output"
+                aria-label={`Connect from ${data.workflow.name}`}
+            />
+        </div>
+    );
+}
+
+const nodeTypes: NodeTypes = {
+    workflow: WorkflowNode,
 };
 
 export default function WorkflowCanvas({
-                                           workflows,
-                                           selectedWorkflowId,
-                                           onSelectWorkflow,
-                                           onMoveWorkflow,
-                                       }: WorkflowCanvasProps) {
-    const handlePointerDown = (
-        event: PointerEvent<HTMLDivElement>,
-        workflow: Workflow,
-    ) => {
-        event.currentTarget.setPointerCapture(event.pointerId);
+    workflows,
+    connections,
+    selectedWorkflowId,
+    onSelectWorkflow,
+    onMoveWorkflow,
+    onConnectWorkflows,
+}: WorkflowCanvasProps) {
+    const initialNodes = useMemo<WorkflowNode[]>(
+        () =>
+            workflows.map((workflow) => ({
+                id: String(workflow.id),
+                type: 'workflow',
+                position: { x: workflow.x, y: workflow.y },
+                data: { workflow },
+                selected: workflow.id === selectedWorkflowId,
+            })),
+        [selectedWorkflowId, workflows],
+    );
+    const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
-        const startX = event.clientX;
-        const startY = event.clientY;
-        const originalX = workflow.x;
-        const originalY = workflow.y;
+    useEffect(() => {
+        setNodes(initialNodes);
+    }, [initialNodes, setNodes]);
 
-        const handlePointerMove = (moveEvent: globalThis.PointerEvent) => {
-            const nextX =
-                originalX + moveEvent.clientX - startX;
+    const edges: Edge[] = connections.map((connection) => ({
+        id: connection.id,
+        source: String(connection.source),
+        target: String(connection.target),
+        type: 'smoothstep',
+        style: { stroke: '#2563eb', strokeWidth: 2 },
+        markerEnd: { type: MarkerType.ArrowClosed, color: '#facc15' },
+    }));
 
-            const nextY =
-                originalY + moveEvent.clientY - startY;
+    const handleConnect = (connection: Connection) => {
+        if (!connection.source || !connection.target) {
+            return;
+        }
 
-            onMoveWorkflow(workflow.id, nextX, nextY);
-        };
-
-        const handlePointerUp = () => {
-            window.removeEventListener(
-                'pointermove',
-                handlePointerMove,
-            );
-
-            window.removeEventListener(
-                'pointerup',
-                handlePointerUp,
-            );
-        };
-
-        window.addEventListener('pointermove', handlePointerMove);
-        window.addEventListener('pointerup', handlePointerUp);
+        onConnectWorkflows(Number(connection.source), Number(connection.target));
     };
 
     return (
         <section className="workflow-canvas">
-            {workflows.map((workflow) => (
-                <div
-                    key={workflow.id}
-                    className={`workflow-node ${
-                        workflow.id === selectedWorkflowId
-                            ? 'workflow-node-selected'
-                            : ''
-                    }`}
-                    style={{
-                        left: workflow.x,
-                        top: workflow.y,
-                    }}
-                    onPointerDown={(event) =>
-                        handlePointerDown(event, workflow)
+            <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                nodeTypes={nodeTypes}
+                onNodesChange={onNodesChange}
+                onNodeDragStop={(_, node) =>
+                    onMoveWorkflow(
+                        Number(node.id),
+                        node.position.x,
+                        node.position.y,
+                    )
+                }
+                onConnect={handleConnect}
+                onNodeClick={(_, node) => {
+                    const workflow = workflows.find(
+                        (candidate) => candidate.id === Number(node.id),
+                    );
+
+                    if (workflow) {
+                        onSelectWorkflow(workflow);
                     }
-                    onClick={() => onSelectWorkflow(workflow)}
-                >
-                    <strong>{workflow.name}</strong>
-                    <span>{workflow.status}</span>
-                </div>
-            ))}
+                }}
+                defaultEdgeOptions={{
+                    type: 'smoothstep',
+                    style: { stroke: '#2563eb', strokeWidth: 2 },
+                    markerEnd: {
+                        type: MarkerType.ArrowClosed,
+                        color: '#facc15',
+                    },
+                }}
+                connectionLineStyle={{ stroke: '#2563eb', strokeWidth: 2 }}
+                fitView
+                minZoom={0.5}
+                maxZoom={1.5}
+            >
+                <Background color="#d9dce1" gap={24} />
+                <Controls />
+            </ReactFlow>
         </section>
     );
 }

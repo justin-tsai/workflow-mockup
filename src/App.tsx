@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import WorkflowList from './components/WorkflowList';
 import ExecutionDetails from './components/ExecutionDetails';
 import { workflows } from './data/workflows';
-import type { Workflow } from './types/workflow';
+import type { Workflow, WorkflowConnection } from './types/workflow';
 import WorkflowCanvas from './components/WorkflowCanvas';
 
 export default function App() {
     const [workflowItems, setWorkflowItems] = useState<Workflow[]>(workflows);
+    const [connections, setConnections] = useState<WorkflowConnection[]>([]);
     const [selectedWorkflowId, setSelectedWorkflowId] = useState<number | null>(null);
     const completionTimersRef = useRef<Record<number, ReturnType<typeof window.setTimeout>>>({});
 
@@ -90,6 +90,33 @@ export default function App() {
         });
     };
 
+    const handleConnectWorkflows = (source: number, target: number) => {
+        if (source === target) {
+            return;
+        }
+
+        setConnections((currentConnections) => {
+            if (
+                currentConnections.some(
+                    (connection) =>
+                        connection.source === source &&
+                        connection.target === target,
+                )
+            ) {
+                return currentConnections;
+            }
+
+            return [
+                ...currentConnections,
+                {
+                    id: `${source}-${target}`,
+                    source,
+                    target,
+                },
+            ];
+        });
+    };
+
     return (
         <main>
             <h1>Workflow Dashboard</h1>
@@ -101,9 +128,11 @@ export default function App() {
             <div className="dashboard">
                 <WorkflowCanvas
                     workflows={workflowItems}
+                    connections={connections}
                     selectedWorkflowId={selectedWorkflowId}
                     onSelectWorkflow={handleSelectWorkflow}
                     onMoveWorkflow={handleMoveWorkflow}
+                    onConnectWorkflows={handleConnectWorkflows}
                 />
 
                 {selectedWorkflow ? (

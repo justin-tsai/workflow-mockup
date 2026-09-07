@@ -14,3 +14,9 @@ export type Workflow = {
     x: number;
     y: number;
 };
+
+export type WorkflowConnection = {
+    id: string;
+    source: number;
+    target: number;
+};
