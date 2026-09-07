@@ -3,6 +3,7 @@ import WorkflowList from './components/WorkflowList';
 import ExecutionDetails from './components/ExecutionDetails';
 import { workflows } from './data/workflows';
 import type { Workflow } from './types/workflow';
+import WorkflowCanvas from './components/WorkflowCanvas';
 
 export default function App() {
     const [workflowItems, setWorkflowItems] = useState<Workflow[]>(workflows);
@@ -52,15 +53,30 @@ export default function App() {
         }, 1200);
     };
 
+    const handleMoveWorkflow = (
+        workflowId: number,
+        x: number,
+        y: number,
+    ) => {
+        setWorkflowItems((currentWorkflows) =>
+            currentWorkflows.map((workflow) =>
+                workflow.id === workflowId
+                    ? { ...workflow, x, y }
+                    : workflow,
+            ),
+        );
+    };
+
     return (
         <main>
             <h1>Workflow Dashboard</h1>
 
             <div className="dashboard">
-                <WorkflowList
+                <WorkflowCanvas
                     workflows={workflowItems}
                     selectedWorkflowId={selectedWorkflowId}
                     onSelectWorkflow={handleSelectWorkflow}
+                    onMoveWorkflow={handleMoveWorkflow}
                 />
 
                 {selectedWorkflow ? (

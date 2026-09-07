@@ -8,6 +8,8 @@ export const workflows: Workflow[] = [
         description: 'Extract information from uploaded documents.',
         startedAt: '2:30 PM',
         duration: 1,
+        x: 80,
+        y: 80,
     },
     {
         id: 2,
@@ -16,6 +18,8 @@ export const workflows: Workflow[] = [
         description: 'Summarize the research findings.',
         startedAt: '1:15 PM',
         duration: 1,
+        x: 360,
+        y: 180,
     },
     {
         id: 3,
@@ -24,5 +28,7 @@ export const workflows: Workflow[] = [
         description: 'Generate and export the final report.',
         startedAt: '12:40 PM',
         duration: 1,
+        x: 180,
+        y: 380,
     },
 ];

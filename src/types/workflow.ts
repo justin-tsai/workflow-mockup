@@ -11,4 +11,6 @@ export type Workflow = {
     description: string;
     duration: number;
     startedAt: string;
+    x: number;
+    y: number;
 };
