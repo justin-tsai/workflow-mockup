@@ -1,11 +1,56 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import WorkflowList from './components/WorkflowList';
 import ExecutionDetails from './components/ExecutionDetails';
 import { workflows } from './data/workflows';
 import type { Workflow } from './types/workflow';
 
 export default function App() {
-    const [selectedWorkflow, setSelectedWorkflow] = useState<Workflow | null>(null);
+    const [workflowItems, setWorkflowItems] = useState<Workflow[]>(workflows);
+    const [selectedWorkflowId, setSelectedWorkflowId] = useState<number | null>(null);
+    const completionTimersRef = useRef<Record<number, ReturnType<typeof window.setTimeout>>>({});
+
+    const selectedWorkflow = useMemo(
+        () => workflowItems.find((workflow) => workflow.id === selectedWorkflowId) ?? null,
+        [selectedWorkflowId, workflowItems],
+    );
+
+    useEffect(() => {
+        const completionTimers = completionTimersRef.current;
+
+        return () => {
+            Object.values(completionTimers).forEach(window.clearTimeout);
+        };
+    }, []);
+
+    const handleSelectWorkflow = (workflow: Workflow) => {
+        setSelectedWorkflowId(workflow.id);
+    };
+
+    const handleRetryWorkflow = (workflowId: number) => {
+        setWorkflowItems((currentWorkflows) =>
+            currentWorkflows.map((workflow) =>
+                workflow.id === workflowId
+                    ? { ...workflow, status: 'running' }
+                    : workflow,
+            ),
+        );
+
+        if (completionTimersRef.current[workflowId]) {
+            window.clearTimeout(completionTimersRef.current[workflowId]);
+        }
+
+        completionTimersRef.current[workflowId] = window.setTimeout(() => {
+            setWorkflowItems((currentWorkflows) =>
+                currentWorkflows.map((workflow) =>
+                    workflow.id === workflowId
+                        ? { ...workflow, status: 'completed' }
+                        : workflow,
+                ),
+            );
+
+            delete completionTimersRef.current[workflowId];
+        }, 1200);
+    };
 
     return (
         <main>
@@ -13,13 +58,16 @@ export default function App() {
 
             <div className="dashboard">
                 <WorkflowList
-                    workflows={workflows}
-                    selectedWorkflowId={selectedWorkflow?.id ?? null}
-                    onSelectWorkflow={setSelectedWorkflow}
+                    workflows={workflowItems}
+                    selectedWorkflowId={selectedWorkflowId}
+                    onSelectWorkflow={handleSelectWorkflow}
                 />
 
                 {selectedWorkflow ? (
-                    <ExecutionDetails workflow={selectedWorkflow} />
+                    <ExecutionDetails
+                        workflow={selectedWorkflow}
+                        onRetryWorkflow={handleRetryWorkflow}
+                    />
                 ) : (
                     <p>Select a workflow to view its details.</p>
                 )}

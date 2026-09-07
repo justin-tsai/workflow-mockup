@@ -5,9 +5,13 @@ import type { Workflow } from '../types/workflow';
 
 type ExecutionDetailsProps = {
     workflow: Workflow;
+    onRetryWorkflow: (workflowId: number) => void;
 };
 
-export default function ExecutionDetails({ workflow }: ExecutionDetailsProps) {
+export default function ExecutionDetails({
+                                             workflow,
+                                             onRetryWorkflow,
+                                         }: ExecutionDetailsProps) {
     return (
         <section className="execution-details">
             <div className="execution-details__header">
@@ -47,7 +51,12 @@ export default function ExecutionDetails({ workflow }: ExecutionDetailsProps) {
             {workflow.status === 'failed' && (
                 <div>
                     <p>This workflow failed.</p>
-                    <button type="button">Retry workflow</button>
+                    <button
+                        type="button"
+                        onClick={() => onRetryWorkflow(workflow.id)}
+                    >
+                        Retry workflow
+                    </button>
                 </div>
             )}
         </section>
