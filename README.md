@@ -1,75 +1,109 @@
-# React + TypeScript + Vite
+# Workflow Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+[View live demo](https://workflow-mockup.vercel.app/)
 
-Currently, two official plugins are available:
+A small React and TypeScript workflow editor built with Vite and React Flow. It lets users create and connect tasks, choose a start task, edit task details, run the connected flow, and inspect execution status.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Screenshots
 
-## React Compiler
+### Dashboard
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+![Workflow dashboard](docs/screenshot-1.png)
 
-## Expanding the ESLint configuration
+### Running workflows
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+![Workflows running with dependent tasks](docs/screenshot-2.png)
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### Failed and blocked workflows
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+![Failed workflow with a blocked downstream workflow](docs/screenshot-3.png)
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Features
 
+- Left-to-right workflow canvas with draggable nodes and directional edges
+- First task selected as the default start node
+- Add new workflow nodes
+- Double-click a selected node title to edit it
+- Click a node to select it, then double-click its description to edit it
+- Select a node/edge and press `Delete` on keyboard to remove it
+- Cycle detection with a temporary error toast
+- Simulated workflow execution with running, completed, failed, and blocked states
+- Execution metadata shown only after a task has started
+- Retry failed workflow steps
+- Responsive graph viewport that refits when its container changes size
+
+## Technologies
+
+- React
+- TypeScript
+- Vite
+- React Flow (`@xyflow/react`)
+- ESLint
+
+## Getting Started
+
+Install dependencies:
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+Start the development server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+```bash
+npm run dev
+```
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Open the local URL printed by Vite in your browser.
 
+## Scripts
+
+```bash
+npm run dev       # Start the Vite development server
+npm run build     # Type-check and create a production build
+npm run lint      # Run ESLint
+npm run preview   # Preview the production build locally
+```
+
+## Project Structure
+
+```text
+src/
+  components/
+    ExecutionDetails.tsx    Selected workflow details and actions
+    StatusBadge.tsx         Execution status badge
+    WorkflowCanvas.tsx      React Flow graph and node interactions
+    WorkflowToolbar.tsx     Run and add-node actions
+  data/
+    workflows.ts            Initial workflow definitions
+  hooks/
+    useWorkflowExecution.ts Simulated execution engine
+  types/
+    workflow.ts             Workflow and connection types
+  utils/
+    workflowGraph.ts        Graph traversal, ID, and cycle helpers
+  App.tsx                   Shared application state and orchestration
+```
+
+## Current Limitations
+- Workflow execution is simulated
+- Workflows are not saved
+- No Authentication or Permissions
+- This is just a React Prototype
+
+## Next Steps
+- Add automated unit tests
+- Add different node types
+- Persist workflows through a backend
+- Support real-time execution updates
+- Workflow history and saved workflows
+- UI/UX improvements
+
+## Validation
+
+Run the following before submitting changes:
+
+```bash
+npm run lint
+npm run build
 ```
