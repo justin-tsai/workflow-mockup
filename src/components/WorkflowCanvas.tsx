@@ -45,6 +45,7 @@ type WorkflowCanvasProps = {
     onUpdateWorkflow: (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => void;
     onConnectWorkflows: (source: number, target: number) => void;
     onDeleteConnections: (connectionIds: string[]) => void;
+    onDeleteWorkflows: (workflowIds: number[]) => void;
 };
 
 function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
@@ -197,6 +198,7 @@ export default function WorkflowCanvas({
     onUpdateWorkflow,
     onConnectWorkflows,
     onDeleteConnections,
+    onDeleteWorkflows,
 }: WorkflowCanvasProps) {
     const canvasRef = useRef<HTMLElement>(null);
     const reactFlowRef = useRef<ReactFlowInstance<WorkflowNode>>(null);
@@ -320,6 +322,9 @@ export default function WorkflowCanvas({
                 onEdgesDelete={(deletedEdges) => {
                     setSelectedConnectionId(null);
                     onDeleteConnections(deletedEdges.map((edge) => edge.id));
+                }}
+                onNodesDelete={(deletedNodes) => {
+                    onDeleteWorkflows(deletedNodes.map((node) => Number(node.id)));
                 }}
                 deleteKeyCode="Delete"
                 onNodeClick={(_, node) => {

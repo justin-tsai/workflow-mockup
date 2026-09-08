@@ -96,19 +96,33 @@ export default function App() {
         ));
     }, []);
 
-    const handleDeleteWorkflow = useCallback((workflowId: number) => {
+    const handleDeleteWorkflows = useCallback((workflowIds: number[]) => {
+        const ids = new Set(workflowIds);
+
         setWorkflowItems((currentWorkflows) => {
-            const remainingWorkflows = currentWorkflows.filter((workflow) => workflow.id !== workflowId);
+            const remainingWorkflows = currentWorkflows.filter((workflow) => !ids.has(workflow.id));
             setStartWorkflowId((currentStartId) =>
-                currentStartId === workflowId ? remainingWorkflows[0]?.id ?? null : currentStartId,
+                currentStartId !== null && ids.has(currentStartId)
+                    ? remainingWorkflows[0]?.id ?? null
+                    : currentStartId,
             );
             return remainingWorkflows;
         });
         setConnections((currentConnections) => currentConnections.filter(
-            (connection) => connection.source !== workflowId && connection.target !== workflowId,
+            (connection) => !ids.has(connection.source) && !ids.has(connection.target),
         ));
-        setSelectedWorkflowId(null);
+        setSelectedWorkflowId((currentSelectedId) =>
+            currentSelectedId !== null && ids.has(currentSelectedId) ? null : currentSelectedId,
+        );
     }, []);
+
+    const handleDeleteWorkflow = useCallback((workflowId: number) => {
+        handleDeleteWorkflows([workflowId]);
+    }, [handleDeleteWorkflows]);
+
+    const handleDeleteWorkflowNodes = useCallback((workflowIds: number[]) => {
+        handleDeleteWorkflows(workflowIds);
+    }, [handleDeleteWorkflows]);
 
     return (
         <main>
@@ -145,6 +159,7 @@ export default function App() {
                     onUpdateWorkflow={handleUpdateWorkflow}
                     onConnectWorkflows={handleConnectWorkflows}
                     onDeleteConnections={handleDeleteConnections}
+                    onDeleteWorkflows={handleDeleteWorkflowNodes}
                 />
 
                 {selectedWorkflow ? (
