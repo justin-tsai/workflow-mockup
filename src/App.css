@@ -412,3 +412,109 @@
   border-color: #64748b;
   background-color: #f8fafc;
 }
+
+@media (max-width: 900px) {
+  main {
+    padding: 28px 18px 36px;
+  }
+
+  .app-header {
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+
+  .workflow-canvas {
+    height: 52svh;
+    min-height: 390px;
+  }
+
+  .dashboard {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dashboard > p {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  main {
+    padding: 20px 12px 28px;
+  }
+
+  h1 {
+    font-size: 28px;
+  }
+
+  .app-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .workflow-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .workflow-actions button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 10px;
+  }
+
+  .workflow-canvas {
+    height: 42svh;
+    min-height: 320px;
+    border-radius: 8px;
+  }
+
+  .workflow-node {
+    width: 178px;
+    height: 108px;
+    padding: 14px;
+  }
+
+  .workflow-node strong {
+    font-size: 14px;
+  }
+
+  .workflow-node-description {
+    min-height: 32px;
+  }
+
+  .react-flow__controls {
+    transform: scale(0.9);
+    transform-origin: bottom left;
+  }
+
+  .execution-details {
+    padding: 16px;
+  }
+
+  .execution-details__header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .execution-details__actions {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .execution-details__actions .status-badge {
+    align-self: flex-start;
+  }
+
+  .execution-details button {
+    width: 100%;
+  }
+
+  .workflow-toast {
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 24px);
+  }
+}
