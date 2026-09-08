@@ -11,7 +11,7 @@ export default function WorkflowToolbar({ isRunning, canRun, onRun, onCreate }: 
             <button type="button" onClick={onRun} disabled={isRunning || !canRun}>
                 {isRunning ? 'Running...' : 'Run'}
             </button>
-            <button type="button" onClick={onCreate}>Add Node</button>
+            <button type="button" onClick={onCreate} disabled={isRunning}>Add Node</button>
         </div>
     );
 }
