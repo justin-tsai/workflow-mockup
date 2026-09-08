@@ -289,6 +289,16 @@
   background-color: #fef2f2;
 }
 
+.workflow-node-queued {
+  border-color: #64748b;
+  background-color: #f8fafc;
+}
+
+.workflow-node-blocked {
+  border-color: #9333ea;
+  background-color: #faf5ff;
+}
+
 .workflow-node-start {
 }
 
@@ -338,4 +348,57 @@
 
 .workflow-handle-output {
   right: -8px;
+}
+
+.workflow-canvas {
+  background-color: #f1f4f7;
+  border-color: #dfe3e8;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgb(15 23 42 / 5%);
+}
+
+.workflow-node {
+  background-color: #fff;
+  border-color: #c9d1da;
+  box-shadow: 0 3px 8px rgb(15 23 42 / 10%);
+}
+
+.workflow-node strong {
+  color: #1e293b;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.workflow-node-selected {
+  box-shadow: 0 0 0 3px rgb(37 99 235 / 16%), 0 3px 8px rgb(15 23 42 / 10%);
+}
+
+.workflow-node-start::before {
+  border-radius: 999px;
+}
+
+.workflow-node-running {
+  border-color: #d97706;
+  background-color: #fff7ed;
+  box-shadow: 0 0 0 3px rgb(217 119 6 / 16%), 0 3px 8px rgb(15 23 42 / 10%);
+}
+
+.workflow-node-completed {
+  border-color: #16a34a;
+  background-color: #f0fdf4;
+}
+
+.workflow-node-failed {
+  border-color: #dc2626;
+  background-color: #fef2f2;
+}
+
+.workflow-node-blocked {
+  border-color: #9333ea;
+  background-color: #faf5ff;
+}
+
+.workflow-node-queued {
+  border-color: #64748b;
+  background-color: #f8fafc;
 }

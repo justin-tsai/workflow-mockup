@@ -98,7 +98,15 @@ export default function App() {
 
     return (
         <main>
-            <h1>Dashboard</h1>
+            <header className="app-header">
+                <div>
+                    <p className="app-eyebrow">Workflow builder</p>
+                    <h1>Dashboard</h1>
+                </div>
+                <p className="app-count">
+                    {workflowItems.length} {workflowItems.length === 1 ? 'task' : 'tasks'}
+                </p>
+            </header>
             <WorkflowToolbar
                 isRunning={isRunning}
                 canRun={startWorkflowId !== null}
