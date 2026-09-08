@@ -40,8 +40,11 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
     const [editingField, setEditingField] = useState<'name' | null>(null);
     const [draftValue, setDraftValue] = useState('');
     const [descriptionDraft, setDescriptionDraft] = useState(data.workflow.description);
+    const [editingDescription, setEditingDescription] = useState(false);
 
     const beginEditing = (field: 'name') => {
+        if (!selected) return;
+
         setEditingField(field);
         setDraftValue(data.workflow[field]);
     };
@@ -74,6 +77,7 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
             />
             {editingField === 'name' ? (
                 <input
+                    className="nodrag"
                     value={draftValue}
                     autoFocus
                     onChange={(event) => setDraftValue(event.target.value)}
@@ -82,7 +86,6 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
                         if (event.key === 'Enter') finishEditing();
                         if (event.key === 'Escape') setEditingField(null);
                     }}
-                    onClick={(event) => event.stopPropagation()}
                 />
             ) : (
                 <strong onDoubleClick={() => beginEditing('name')}>
@@ -91,18 +94,28 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
             )}
 
             <textarea
-                className="workflow-node-description"
+                className={`workflow-node-description ${selected ? 'nodrag' : 'workflow-node-description-disabled'}`}
                 value={descriptionDraft}
+                readOnly={!selected || !editingDescription}
                 rows={2}
                 onChange={(event) => setDescriptionDraft(event.target.value)}
+                onDoubleClick={() => {
+                    if (selected) setEditingDescription(true);
+                }}
                 onBlur={() => {
                     const value = descriptionDraft.trim();
-                    if (value && value !== data.workflow.description) {
+                    if (selected && editingDescription && value && value !== data.workflow.description) {
                         data.onUpdateWorkflow(data.workflow.id, { description: value });
                     }
+                    setEditingDescription(false);
                 }}
-                onPointerDown={(event) => event.stopPropagation()}
-                onClick={(event) => event.stopPropagation()}
+                onKeyDown={(event) => {
+                    if (event.key === 'Escape') {
+                        setDescriptionDraft(data.workflow.description);
+                        setEditingDescription(false);
+                        event.currentTarget.blur();
+                    }
+                }}
             />
 
             {data.workflow.status && <span>{data.workflow.status}</span>}

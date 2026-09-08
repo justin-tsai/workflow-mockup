@@ -247,6 +247,10 @@
   outline: none;
 }
 
+.workflow-node-description-disabled {
+  pointer-events: none;
+}
+
 .workflow-node input {
   width: 100%;
   box-sizing: border-box;
@@ -292,6 +296,12 @@
 .workflow-node-queued {
   border-color: #64748b;
   background-color: #f8fafc;
+}
+
+.workflow-node.workflow-node-selected {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 24%), 0 3px 8px rgb(15 23 42 / 10%);
 }
 
 .workflow-node-blocked {
