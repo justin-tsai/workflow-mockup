@@ -3,12 +3,14 @@ import NodeDetails from "./components/NodeDetails";
 import WorkflowCanvas from "./components/WorkflowCanvas";
 import WorkflowToolbar from "./components/WorkflowToolbar";
 import { useWorkflowEditor } from "./hooks/useWorkflowEditor";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function App() {
   const editor = useWorkflowEditor();
 
   return (
-    <main>
+    <>
+      <main>
       <header className="app-header">
         <div>
           <p className="app-eyebrow">Workflow builder</p>
@@ -76,6 +78,8 @@ export default function App() {
           <p>Select a node to view its details.</p>
         )}
       </div>
-    </main>
+      </main>
+      <Analytics />
+    </>
   );
 }
