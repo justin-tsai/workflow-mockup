@@ -1,6 +1,12 @@
 import type { Workflow } from '../types/workflow';
 
-export const workflows: Workflow[] = [
+export const workflow: Workflow = {
+    startNodeId: 1,
+    edges: [
+        { id: '1-2', source: 1, target: 2 },
+        { id: '2-3', source: 2, target: 3 },
+    ],
+    nodes: [
     {
         id: 1,
         name: 'First task',
@@ -25,4 +31,5 @@ export const workflows: Workflow[] = [
         x: 225,
         y: 100,
     },
-];
+    ],
+};

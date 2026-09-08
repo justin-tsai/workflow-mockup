@@ -1,12 +1,12 @@
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import { useState } from 'react';
-import type { Workflow } from '../types/workflow';
+import type { WorkflowNode as WorkflowNodeModel } from '../types/workflow';
 
 export type WorkflowNodeData = {
-    workflow: Workflow;
+    node: WorkflowNodeModel;
     isStart: boolean;
-    onSelectWorkflow: (workflow: Workflow) => void;
-    onUpdateWorkflow: (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => void;
+    onSelectNode: (node: WorkflowNodeModel) => void;
+    onUpdateNode: (nodeId: number, updates: Partial<Pick<WorkflowNodeModel, 'name' | 'description'>>) => void;
 };
 
 export type WorkflowNode = Node<WorkflowNodeData, 'workflow'>;
@@ -14,30 +14,30 @@ export type WorkflowNode = Node<WorkflowNodeData, 'workflow'>;
 export default function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
     const [editingField, setEditingField] = useState<'name' | null>(null);
     const [draftValue, setDraftValue] = useState('');
-    const [descriptionDraft, setDescriptionDraft] = useState(data.workflow.description);
+    const [descriptionDraft, setDescriptionDraft] = useState(data.node.description);
     const [editingDescription, setEditingDescription] = useState(false);
 
     const beginEditing = () => {
         if (!selected) return;
         setEditingField('name');
-        setDraftValue(data.workflow.name);
+        setDraftValue(data.node.name);
     };
 
     const finishEditing = () => {
         if (!editingField) return;
         const value = draftValue.trim();
-        if (value) data.onUpdateWorkflow(data.workflow.id, { name: value });
+        if (value) data.onUpdateNode(data.node.id, { name: value });
         setEditingField(null);
     };
 
-    const statusClass = data.workflow.status ? `workflow-node-${data.workflow.status}` : '';
+    const statusClass = data.node.status ? `workflow-node-${data.node.status}` : '';
 
     return (
         <div
             className={`workflow-node ${selected ? 'workflow-node-selected' : ''} ${data.isStart ? 'workflow-node-start' : ''} ${statusClass}`}
-            onPointerDown={() => data.onSelectWorkflow(data.workflow)}
+            onPointerDown={() => data.onSelectNode(data.node)}
         >
-            <Handle type="target" position={Position.Left} className="workflow-handle workflow-handle-input" aria-label={`Connect into ${data.workflow.name}`} />
+            <Handle type="target" position={Position.Left} className="workflow-handle workflow-handle-input" aria-label={`Connect into ${data.node.name}`} />
             {editingField === 'name' ? (
                 <input
                     className="nodrag"
@@ -51,7 +51,7 @@ export default function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>
                     }}
                 />
             ) : (
-                <strong onDoubleClick={beginEditing}>{data.workflow.name}</strong>
+                <strong onDoubleClick={beginEditing}>{data.node.name}</strong>
             )}
             <textarea
                 className={`workflow-node-description ${selected ? 'nodrag' : 'workflow-node-description-disabled'}`}
@@ -62,21 +62,21 @@ export default function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>
                 onDoubleClick={() => { if (selected) setEditingDescription(true); }}
                 onBlur={() => {
                     const value = descriptionDraft.trim();
-                    if (selected && editingDescription && value && value !== data.workflow.description) {
-                        data.onUpdateWorkflow(data.workflow.id, { description: value });
+                    if (selected && editingDescription && value && value !== data.node.description) {
+                        data.onUpdateNode(data.node.id, { description: value });
                     }
                     setEditingDescription(false);
                 }}
                 onKeyDown={(event) => {
                     if (event.key === 'Escape') {
-                        setDescriptionDraft(data.workflow.description);
+                        setDescriptionDraft(data.node.description);
                         setEditingDescription(false);
                         event.currentTarget.blur();
                     }
                 }}
             />
-            {data.workflow.status && <span>{data.workflow.status}</span>}
-            <Handle type="source" position={Position.Right} className="workflow-handle workflow-handle-output" aria-label={`Connect from ${data.workflow.name}`} />
+            {data.node.status && <span>{data.node.status}</span>}
+            <Handle type="source" position={Position.Right} className="workflow-handle workflow-handle-output" aria-label={`Connect from ${data.node.name}`} />
         </div>
     );
 }

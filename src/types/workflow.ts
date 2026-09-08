@@ -6,7 +6,7 @@ export type WorkflowStatus =
     | 'failed'
     | 'blocked';
 
-export type Workflow = {
+export type WorkflowNode = {
     id: number;
     name: string;
     status: WorkflowStatus | null;
@@ -17,8 +17,14 @@ export type Workflow = {
     y: number;
 };
 
-export type WorkflowConnection = {
+export type WorkflowEdge = {
     id: string;
     source: number;
     target: number;
+};
+
+export type Workflow = {
+    nodes: WorkflowNode[];
+    edges: WorkflowEdge[];
+    startNodeId: number | null;
 };

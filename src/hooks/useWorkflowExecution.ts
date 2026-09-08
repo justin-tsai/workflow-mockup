@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { Workflow, WorkflowConnection, WorkflowStatus } from '../types/workflow';
+import type { WorkflowNode, WorkflowEdge, WorkflowStatus } from '../types/workflow';
 import { getExecutionOrder } from '../utils/workflowGraph';
 
-type UpdateWorkflows = (update: (workflows: Workflow[]) => Workflow[]) => void;
+type UpdateNodes = (update: (nodes: WorkflowNode[]) => WorkflowNode[]) => void;
 type RunState = Exclude<WorkflowStatus, 'idle' | 'queued'> | 'pending';
 
 type UseWorkflowExecutionOptions = {
-    workflows: Workflow[];
-    connections: WorkflowConnection[];
-    updateWorkflows: UpdateWorkflows;
+    nodes: WorkflowNode[];
+    edges: WorkflowEdge[];
+    updateNodes: UpdateNodes;
 };
 
 export function useWorkflowExecution({
-    workflows,
-    connections,
-    updateWorkflows,
+    nodes,
+    edges,
+    updateNodes,
 }: UseWorkflowExecutionOptions) {
     const [isRunning, setIsRunning] = useState(false);
     const timersRef = useRef<Record<number, ReturnType<typeof window.setTimeout>>>({});
@@ -32,15 +32,15 @@ export function useWorkflowExecution({
             Object.values(timersRef.current).forEach(window.clearTimeout);
             timersRef.current = {};
             const runToken = ++runTokenRef.current;
-            const executionOrder = getExecutionOrder(workflows, connections, requestedStartId);
+            const executionOrder = getExecutionOrder(nodes, edges, requestedStartId);
             if (executionOrder.length === 0) return;
 
             setIsRunning(true);
             const startedAt = new Date().toLocaleTimeString();
-            const executionIds = new Set(executionOrder.map((workflow) => workflow.id));
-            updateWorkflows((currentWorkflows) => currentWorkflows.map((workflow) => ({
-                ...workflow,
-                ...(executionIds.has(workflow.id)
+            const executionIds = new Set(executionOrder.map((node) => node.id));
+            updateNodes((currentNodes) => currentNodes.map((node) => ({
+                ...node,
+                ...(executionIds.has(node.id)
                     ? { status: null, startedAt: undefined, duration: undefined }
                     : {}),
             })));
@@ -52,16 +52,16 @@ export function useWorkflowExecution({
                 parentIds.set(workflow.id, []);
                 runStates.set(workflow.id, 'pending');
             });
-            connections.forEach((connection) => {
-                if (reachableIds.has(connection.source) && reachableIds.has(connection.target)) {
-                    parentIds.get(connection.target)?.push(connection.source);
+            edges.forEach((edge) => {
+                if (reachableIds.has(edge.source) && reachableIds.has(edge.target)) {
+                    parentIds.get(edge.target)?.push(edge.source);
                 }
             });
 
             let activeWorkflows = 0;
             const markWorkflows = (ids: number[], status: WorkflowStatus) => {
-                updateWorkflows((currentWorkflows) => currentWorkflows.map((workflow) =>
-                    ids.includes(workflow.id) ? { ...workflow, status } : workflow,
+                updateNodes((currentNodes) => currentNodes.map((node) =>
+                    ids.includes(node.id) ? { ...node, status } : node,
                 ));
             };
             const finishRunIfComplete = () => {
@@ -103,10 +103,10 @@ export function useWorkflowExecution({
                     const duration = Math.floor(Math.random() * 9) + 2;
                     runStates.set(workflow.id, 'running');
                     activeWorkflows += 1;
-                    updateWorkflows((currentWorkflows) => currentWorkflows.map((currentWorkflow) =>
-                        currentWorkflow.id === workflow.id
-                            ? { ...currentWorkflow, status: 'running', startedAt, duration }
-                            : currentWorkflow,
+                    updateNodes((currentNodes) => currentNodes.map((currentNode) =>
+                        currentNode.id === workflow.id
+                            ? { ...currentNode, status: 'running', startedAt, duration }
+                            : currentNode,
                     ));
 
                     timersRef.current[workflow.id] = window.setTimeout(() => {
@@ -133,7 +133,7 @@ export function useWorkflowExecution({
 
             scheduleReadyWorkflows();
         },
-        [connections, isRunning, updateWorkflows, workflows],
+        [edges, isRunning, nodes, updateNodes],
     );
 
     return { isRunning, runWorkflow };

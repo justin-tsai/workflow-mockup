@@ -1,176 +1,82 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { workflows as initialWorkflows } from '../data/workflows';
+import { workflow as initialWorkflow } from '../data/workflows';
 import { useWorkflowExecution } from './useWorkflowExecution';
-import type { Workflow, WorkflowConnection } from '../types/workflow';
-import { getNextWorkflowId, wouldCreateCycle } from '../utils/workflowGraph';
+import type { Workflow, WorkflowNode } from '../types/workflow';
+import { getNextNodeId, wouldCreateCycle } from '../utils/workflowGraph';
 
 type ConnectionError = { id: number; message: string };
-
-type InspectorSelection =
-    | { type: 'node'; id: number }
-    | { type: 'connection'; id: string }
-    | null;
+type InspectorSelection = { type: 'node'; id: number } | { type: 'edge'; id: string } | null;
 
 export function useWorkflowEditor() {
-    const [workflowItems, setWorkflowItems] = useState<Workflow[]>(initialWorkflows);
-    const [connections, setConnections] = useState<WorkflowConnection[]>(() =>
-        initialWorkflows.slice(0, -1).map((workflow, index) => ({
-            id: `${workflow.id}-${initialWorkflows[index + 1].id}`,
-            source: workflow.id,
-            target: initialWorkflows[index + 1].id,
-        })),
-    );
+    const [workflow, setWorkflow] = useState<Workflow>(initialWorkflow);
     const [inspectorSelection, setInspectorSelection] = useState<InspectorSelection>(null);
-    const [startWorkflowId, setStartWorkflowId] = useState<number | null>(initialWorkflows[0]?.id ?? null);
     const [connectionError, setConnectionError] = useState<ConnectionError | null>(null);
 
     useEffect(() => {
         if (!connectionError) return;
-
         const timeout = window.setTimeout(() => setConnectionError(null), 3500);
         return () => window.clearTimeout(timeout);
     }, [connectionError]);
 
-    const selectedWorkflowId = inspectorSelection?.type === 'node' ? inspectorSelection.id : null;
-    const selectedConnectionId = inspectorSelection?.type === 'connection' ? inspectorSelection.id : null;
-    const selectedWorkflow = useMemo(
-        () => workflowItems.find((workflow) => workflow.id === selectedWorkflowId) ?? null,
-        [selectedWorkflowId, workflowItems],
-    );
-    const selectedConnection = useMemo(
-        () => connections.find((connection) => connection.id === selectedConnectionId) ?? null,
-        [connections, selectedConnectionId],
-    );
-    const selectedConnectionSource = useMemo(
-        () => workflowItems.find((workflow) => workflow.id === selectedConnection?.source) ?? null,
-        [selectedConnection, workflowItems],
-    );
-    const selectedConnectionTarget = useMemo(
-        () => workflowItems.find((workflow) => workflow.id === selectedConnection?.target) ?? null,
-        [selectedConnection, workflowItems],
-    );
+    const selectedNodeId = inspectorSelection?.type === 'node' ? inspectorSelection.id : null;
+    const selectedEdgeId = inspectorSelection?.type === 'edge' ? inspectorSelection.id : null;
+    const selectedNode = useMemo(() => workflow.nodes.find((node) => node.id === selectedNodeId) ?? null, [selectedNodeId, workflow.nodes]);
+    const selectedEdge = useMemo(() => workflow.edges.find((edge) => edge.id === selectedEdgeId) ?? null, [selectedEdgeId, workflow.edges]);
+    const selectedEdgeSource = useMemo(() => workflow.nodes.find((node) => node.id === selectedEdge?.source) ?? null, [selectedEdge, workflow.nodes]);
+    const selectedEdgeTarget = useMemo(() => workflow.nodes.find((node) => node.id === selectedEdge?.target) ?? null, [selectedEdge, workflow.nodes]);
 
     const { isRunning, runWorkflow } = useWorkflowExecution({
-        workflows: workflowItems,
-        connections,
-        updateWorkflows: setWorkflowItems,
+        nodes: workflow.nodes,
+        edges: workflow.edges,
+        updateNodes: (update) => setWorkflow((current) => ({ ...current, nodes: update(current.nodes) })),
     });
 
-    const handleCreateWorkflow = useCallback(() => {
-        setWorkflowItems((currentWorkflows) => {
-            const nextId = getNextWorkflowId(currentWorkflows);
-            return [...currentWorkflows, {
-                id: nextId,
-                name: `New workflow ${nextId}`,
-                status: null,
-                description: 'A new workflow.',
-                x: 100 + currentWorkflows.length * 30,
-                y: 100 + currentWorkflows.length * 30,
-            }];
+    const handleCreateNode = useCallback(() => {
+        setWorkflow((current) => {
+            const id = getNextNodeId(current.nodes);
+            const node: WorkflowNode = { id, name: `New node ${id}`, status: null, description: 'A new workflow node.', x: 100 + current.nodes.length * 30, y: 100 + current.nodes.length * 30 };
+            return { ...current, nodes: [...current.nodes, node] };
         });
     }, []);
 
-    const handleMoveWorkflow = useCallback((workflowId: number, x: number, y: number) => {
-        setWorkflowItems((currentWorkflows) => currentWorkflows.map((workflow) =>
-            workflow.id === workflowId ? { ...workflow, x, y } : workflow,
-        ));
+    const handleMoveNode = useCallback((nodeId: number, x: number, y: number) => {
+        setWorkflow((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === nodeId ? { ...node, x, y } : node) }));
     }, []);
 
-    const handleUpdateWorkflow = useCallback(
-        (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => {
-            setWorkflowItems((currentWorkflows) => currentWorkflows.map((workflow) =>
-                workflow.id === workflowId ? { ...workflow, ...updates } : workflow,
-            ));
-        },
-        [],
-    );
+    const handleUpdateNode = useCallback((nodeId: number, updates: Partial<Pick<WorkflowNode, 'name' | 'description'>>) => {
+        setWorkflow((current) => ({ ...current, nodes: current.nodes.map((node) => node.id === nodeId ? { ...node, ...updates } : node) }));
+    }, []);
 
-    const handleConnectWorkflows = useCallback((source: number, target: number) => {
-        if (wouldCreateCycle(connections, source, target)) {
-            setConnectionError({
-                id: Date.now(),
-                message: 'Cannot connect these tasks because it would create a cycle.',
-            });
+    const handleConnectNodes = useCallback((source: number, target: number) => {
+        if (wouldCreateCycle(workflow.edges, source, target)) {
+            setConnectionError({ id: Date.now(), message: 'Cannot connect these nodes because it would create a cycle.' });
             return;
         }
+        setWorkflow((current) => ({ ...current, edges: current.edges.some((edge) => edge.source === source && edge.target === target) ? current.edges : [...current.edges, { id: `${source}-${target}`, source, target }] }));
+    }, [workflow.edges]);
 
-        setConnections((currentConnections) =>
-            currentConnections.some((connection) => connection.source === source && connection.target === target)
-                ? currentConnections
-                : [...currentConnections, { id: `${source}-${target}`, source, target }],
-        );
-    }, [connections]);
-
-    const handleDeleteConnections = useCallback((connectionIds: string[]) => {
-        const ids = new Set(connectionIds);
-        setConnections((currentConnections) => currentConnections.filter(
-            (connection) => !ids.has(connection.id),
-        ));
-        setInspectorSelection((currentSelection) =>
-            currentSelection?.type === 'connection' && ids.has(currentSelection.id)
-                ? null
-                : currentSelection,
-        );
+    const handleDeleteEdges = useCallback((edgeIds: string[]) => {
+        const ids = new Set(edgeIds);
+        setWorkflow((current) => ({ ...current, edges: current.edges.filter((edge) => !ids.has(edge.id)) }));
+        setInspectorSelection((selection) => selection?.type === 'edge' && ids.has(selection.id) ? null : selection);
     }, []);
 
-    const handleDeleteWorkflows = useCallback((workflowIds: number[]) => {
-        const ids = new Set(workflowIds);
-        setWorkflowItems((currentWorkflows) => {
-            const remainingWorkflows = currentWorkflows.filter((workflow) => !ids.has(workflow.id));
-            setStartWorkflowId((currentStartId) =>
-                currentStartId !== null && ids.has(currentStartId)
-                    ? remainingWorkflows[0]?.id ?? null
-                    : currentStartId,
-            );
-            return remainingWorkflows;
+    const handleDeleteNodes = useCallback((nodeIds: number[]) => {
+        const ids = new Set(nodeIds);
+        setWorkflow((current) => {
+            const nodes = current.nodes.filter((node) => !ids.has(node.id));
+            return { ...current, nodes, edges: current.edges.filter((edge) => !ids.has(edge.source) && !ids.has(edge.target)), startNodeId: current.startNodeId !== null && ids.has(current.startNodeId) ? nodes[0]?.id ?? null : current.startNodeId };
         });
-        setConnections((currentConnections) => currentConnections.filter(
-            (connection) => !ids.has(connection.source) && !ids.has(connection.target),
-        ));
-        setInspectorSelection((currentSelection) => {
-            if (currentSelection?.type === 'node' && ids.has(currentSelection.id)) return null;
-            if (currentSelection?.type === 'connection' && connections.some(
-                (connection) => connection.id === currentSelection.id &&
-                    (ids.has(connection.source) || ids.has(connection.target)),
-            )) return null;
-            return currentSelection;
+        setInspectorSelection((selection) => {
+            if (selection?.type === 'node' && ids.has(selection.id)) return null;
+            if (selection?.type === 'edge' && workflow.edges.some((edge) => edge.id === selection.id && (ids.has(edge.source) || ids.has(edge.target)))) return null;
+            return selection;
         });
-    }, [connections]);
+    }, [workflow.edges]);
 
-    const handleDeleteWorkflow = useCallback((workflowId: number) => {
-        handleDeleteWorkflows([workflowId]);
-    }, [handleDeleteWorkflows]);
+    const selectNode = useCallback((node: WorkflowNode) => setInspectorSelection({ type: 'node', id: node.id }), []);
+    const selectEdge = useCallback((edgeId: string | null) => setInspectorSelection(edgeId ? { type: 'edge', id: edgeId } : null), []);
+    const setStartNodeId = useCallback((nodeId: number) => setWorkflow((current) => ({ ...current, startNodeId: nodeId })), []);
 
-    const selectWorkflow = useCallback((workflow: Workflow) => {
-        setInspectorSelection({ type: 'node', id: workflow.id });
-    }, []);
-
-    const selectConnection = useCallback((connectionId: string | null) => {
-        setInspectorSelection(connectionId ? { type: 'connection', id: connectionId } : null);
-    }, []);
-
-    return {
-        workflowItems,
-        connections,
-        selectedWorkflowId,
-        selectedConnectionId,
-        startWorkflowId,
-        connectionError,
-        selectedWorkflow,
-        selectedConnection,
-        selectedConnectionSource,
-        selectedConnectionTarget,
-        setStartWorkflowId,
-        isRunning,
-        runWorkflow,
-        handleCreateWorkflow,
-        handleMoveWorkflow,
-        handleUpdateWorkflow,
-        handleConnectWorkflows,
-        handleDeleteConnections,
-        handleDeleteWorkflows,
-        handleDeleteWorkflow,
-        selectWorkflow,
-        selectConnection,
-    };
+    return { workflow, nodes: workflow.nodes, edges: workflow.edges, selectedNodeId, selectedEdgeId, startNodeId: workflow.startNodeId, connectionError, selectedNode, selectedEdge, selectedEdgeSource, selectedEdgeTarget, setStartNodeId, isRunning, runWorkflow, handleCreateNode, handleMoveNode, handleUpdateNode, handleConnectNodes, handleDeleteEdges, handleDeleteNodes, selectNode, selectEdge };
 }

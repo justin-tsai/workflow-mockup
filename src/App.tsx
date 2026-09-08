@@ -15,15 +15,15 @@ export default function App() {
                     <h1>Dashboard</h1>
                 </div>
                 <p className="app-count">
-                    {editor.workflowItems.length} {editor.workflowItems.length === 1 ? 'task' : 'tasks'}
+                    {editor.nodes.length} {editor.nodes.length === 1 ? 'node' : 'nodes'}
                 </p>
             </header>
 
             <WorkflowToolbar
                 isRunning={editor.isRunning}
-                canRun={editor.startWorkflowId !== null}
-                onRun={() => editor.runWorkflow(editor.startWorkflowId)}
-                onCreate={editor.handleCreateWorkflow}
+                canRun={editor.startNodeId !== null}
+                onRun={() => editor.runWorkflow(editor.startNodeId)}
+                onCreate={editor.handleCreateNode}
             />
 
             {editor.connectionError && (
@@ -34,34 +34,34 @@ export default function App() {
 
             <div className="dashboard">
                 <WorkflowCanvas
-                    workflows={editor.workflowItems}
-                    connections={editor.connections}
-                    selectedWorkflowId={editor.selectedWorkflowId}
-                    startWorkflowId={editor.startWorkflowId}
-                    onSelectWorkflow={editor.selectWorkflow}
-                    onMoveWorkflow={editor.handleMoveWorkflow}
-                    onUpdateWorkflow={editor.handleUpdateWorkflow}
-                    onConnectWorkflows={editor.handleConnectWorkflows}
-                    onDeleteConnections={editor.handleDeleteConnections}
-                    onDeleteWorkflows={editor.handleDeleteWorkflows}
-                    selectedConnectionId={editor.selectedConnectionId}
-                    onSelectConnection={editor.selectConnection}
+                    nodes={editor.nodes}
+                    edges={editor.edges}
+                    selectedNodeId={editor.selectedNodeId}
+                    startNodeId={editor.startNodeId}
+                    onSelectNode={editor.selectNode}
+                    onMoveNode={editor.handleMoveNode}
+                    onUpdateNode={editor.handleUpdateNode}
+                    onConnectNodes={editor.handleConnectNodes}
+                    onDeleteEdges={editor.handleDeleteEdges}
+                    onDeleteNodes={editor.handleDeleteNodes}
+                    selectedEdgeId={editor.selectedEdgeId}
+                    onSelectEdge={editor.selectEdge}
                 />
 
-                {editor.selectedConnection && editor.selectedConnectionSource && editor.selectedConnectionTarget ? (
+                {editor.selectedEdge && editor.selectedEdgeSource && editor.selectedEdgeTarget ? (
                     <ConnectionDetails
-                        source={editor.selectedConnectionSource}
-                        target={editor.selectedConnectionTarget}
-                        onDeleteConnection={() => editor.handleDeleteConnections([editor.selectedConnection!.id])}
+                        source={editor.selectedEdgeSource}
+                        target={editor.selectedEdgeTarget}
+                        onDeleteConnection={() => editor.handleDeleteEdges([editor.selectedEdge!.id])}
                     />
-                ) : editor.selectedWorkflow ? (
+                ) : editor.selectedNode ? (
                     <NodeDetails
-                        workflow={editor.selectedWorkflow}
+                        workflow={editor.selectedNode}
                         onRetryWorkflow={editor.runWorkflow}
-                        isStartNode={editor.selectedWorkflow.id === editor.startWorkflowId}
+                        isStartNode={editor.selectedNode.id === editor.startNodeId}
                         isRunning={editor.isRunning}
-                        onSetStartNode={editor.setStartWorkflowId}
-                        onDeleteWorkflow={editor.handleDeleteWorkflow}
+                        onSetStartNode={editor.setStartNodeId}
+                        onDeleteWorkflow={(nodeId) => editor.handleDeleteNodes([nodeId])}
                     />
                 ) : (
                     <p>Select a workflow to view its details.</p>

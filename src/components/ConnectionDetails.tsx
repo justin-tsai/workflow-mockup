@@ -1,9 +1,9 @@
 import DetailsPanel from './DetailsPanel';
-import type { Workflow } from '../types/workflow';
+import type { WorkflowNode } from '../types/workflow';
 
 type ConnectionDetailsProps = {
-    source: Workflow;
-    target: Workflow;
+    source: WorkflowNode;
+    target: WorkflowNode;
     onDeleteConnection: () => void;
 };
 

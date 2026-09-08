@@ -10,56 +10,56 @@ import {
     type ReactFlowInstance,
 } from '@xyflow/react';
 import { useEffect, useMemo, useRef } from 'react';
-import type { Workflow, WorkflowConnection } from '../types/workflow';
+import type { WorkflowNode as WorkflowNodeModel, WorkflowEdge } from '../types/workflow';
 import WorkflowNode, { type WorkflowNode as WorkflowNodeType } from './WorkflowNode';
 
 type WorkflowCanvasProps = {
-    workflows: Workflow[];
-    connections: WorkflowConnection[];
-    selectedWorkflowId: number | null;
-    startWorkflowId: number | null;
-    onSelectWorkflow: (workflow: Workflow) => void;
-    onMoveWorkflow: (workflowId: number, x: number, y: number) => void;
-    onUpdateWorkflow: (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => void;
-    onConnectWorkflows: (source: number, target: number) => void;
-    onDeleteConnections: (connectionIds: string[]) => void;
-    onDeleteWorkflows: (workflowIds: number[]) => void;
-    selectedConnectionId: string | null;
-    onSelectConnection: (connectionId: string | null) => void;
+    nodes: WorkflowNodeModel[];
+    edges: WorkflowEdge[];
+    selectedNodeId: number | null;
+    startNodeId: number | null;
+    onSelectNode: (node: WorkflowNodeModel) => void;
+    onMoveNode: (nodeId: number, x: number, y: number) => void;
+    onUpdateNode: (nodeId: number, updates: Partial<Pick<WorkflowNodeModel, 'name' | 'description'>>) => void;
+    onConnectNodes: (source: number, target: number) => void;
+    onDeleteEdges: (edgeIds: string[]) => void;
+    onDeleteNodes: (nodeIds: number[]) => void;
+    selectedEdgeId: string | null;
+    onSelectEdge: (edgeId: string | null) => void;
 };
 
 const nodeTypes: NodeTypes = { workflow: WorkflowNode };
 
 export default function WorkflowCanvas({
-    workflows,
-    connections,
-    selectedWorkflowId,
-    startWorkflowId,
-    onSelectWorkflow,
-    onMoveWorkflow,
-    onUpdateWorkflow,
-    onConnectWorkflows,
-    onDeleteConnections,
-    onDeleteWorkflows,
-    selectedConnectionId,
-    onSelectConnection,
+    nodes: workflowNodes,
+    edges: workflowEdges,
+    selectedNodeId,
+    startNodeId,
+    onSelectNode,
+    onMoveNode,
+    onUpdateNode,
+    onConnectNodes,
+    onDeleteEdges,
+    onDeleteNodes,
+    selectedEdgeId,
+    onSelectEdge,
 }: WorkflowCanvasProps) {
     const canvasRef = useRef<HTMLElement>(null);
     const reactFlowRef = useRef<ReactFlowInstance<WorkflowNodeType>>(null);
     const initialNodes = useMemo<WorkflowNodeType[]>(
-        () => workflows.map((workflow) => ({
-            id: String(workflow.id),
+        () => workflowNodes.map((node) => ({
+            id: String(node.id),
             type: 'workflow',
-            position: { x: workflow.x, y: workflow.y },
+            position: { x: node.x, y: node.y },
                 data: {
-                    workflow,
-                    isStart: workflow.id === startWorkflowId,
-                    onSelectWorkflow,
-                    onUpdateWorkflow,
+                    node,
+                    isStart: node.id === startNodeId,
+                    onSelectNode,
+                    onUpdateNode,
                 },
-            selected: workflow.id === selectedWorkflowId,
+            selected: node.id === selectedNodeId,
         })),
-        [onSelectWorkflow, onUpdateWorkflow, selectedWorkflowId, startWorkflowId, workflows],
+        [onSelectNode, onUpdateNode, selectedNodeId, startNodeId, workflowNodes],
     );
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
@@ -75,13 +75,13 @@ export default function WorkflowCanvas({
         return () => resizeObserver.disconnect();
     }, []);
 
-    const edges: Edge[] = connections.map((connection) => {
-        const selected = connection.id === selectedConnectionId;
+    const edges: Edge[] = workflowEdges.map((edge) => {
+        const selected = edge.id === selectedEdgeId;
 
         return {
-            id: connection.id,
-            source: String(connection.source),
-            target: String(connection.target),
+            id: edge.id,
+            source: String(edge.source),
+            target: String(edge.target),
             type: 'smoothstep',
             selected,
             interactionWidth: 24,
@@ -92,7 +92,7 @@ export default function WorkflowCanvas({
 
     const handleConnect = (connection: Connection) => {
         if (connection.source && connection.target) {
-            onConnectWorkflows(Number(connection.source), Number(connection.target));
+            onConnectNodes(Number(connection.source), Number(connection.target));
         }
     };
 
@@ -103,16 +103,16 @@ export default function WorkflowCanvas({
                 edges={edges}
                 nodeTypes={nodeTypes}
                 onNodesChange={onNodesChange}
-                onNodeDragStop={(_, node) => onMoveWorkflow(Number(node.id), node.position.x, node.position.y)}
+                onNodeDragStop={(_, node) => onMoveNode(Number(node.id), node.position.x, node.position.y)}
                 onConnect={handleConnect}
-                onEdgeClick={(_, edge) => onSelectConnection(edge.id)}
+                onEdgeClick={(_, edge) => onSelectEdge(edge.id)}
                 onEdgesDelete={(deletedEdges) => {
-                    onSelectConnection(null);
-                    onDeleteConnections(deletedEdges.map((edge) => edge.id));
+                    onSelectEdge(null);
+                    onDeleteEdges(deletedEdges.map((edge) => edge.id));
                 }}
-                onNodesDelete={(deletedNodes) => onDeleteWorkflows(deletedNodes.map((node) => Number(node.id)))}
+                onNodesDelete={(deletedNodes) => onDeleteNodes(deletedNodes.map((node) => Number(node.id)))}
                 deleteKeyCode="Delete"
-                onPaneClick={() => onSelectConnection(null)}
+                onPaneClick={() => onSelectEdge(null)}
                 onInit={(instance) => { reactFlowRef.current = instance; }}
                 defaultEdgeOptions={{
                     type: 'smart',

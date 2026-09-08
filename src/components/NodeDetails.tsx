@@ -1,9 +1,9 @@
 import StatusBadge from './StatusBadge';
 import DetailsPanel from './DetailsPanel';
-import type { Workflow } from '../types/workflow';
+import type { WorkflowNode } from '../types/workflow';
 
 type NodeDetailsProps = {
-    workflow: Workflow;
+    workflow: WorkflowNode;
     onRetryWorkflow: (workflowId: number) => void;
     isStartNode: boolean;
     isRunning: boolean;

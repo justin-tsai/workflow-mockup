@@ -1,7 +1,7 @@
-import type { Workflow, WorkflowConnection } from '../types/workflow';
+import type { WorkflowNode, WorkflowEdge } from '../types/workflow';
 
 export function wouldCreateCycle(
-    connections: WorkflowConnection[],
+    edges: WorkflowEdge[],
     source: number,
     target: number,
 ) {
@@ -16,17 +16,17 @@ export function wouldCreateCycle(
         if (workflowId === source) return true;
 
         visited.add(workflowId);
-        connections
-            .filter((connection) => connection.source === workflowId)
-            .forEach((connection) => pending.push(connection.target));
+        edges
+            .filter((edge) => edge.source === workflowId)
+            .forEach((edge) => pending.push(edge.target));
     }
 
     return false;
 }
 
 export function getExecutionOrder(
-    workflows: Workflow[],
-    connections: WorkflowConnection[],
+    nodes: WorkflowNode[],
+    edges: WorkflowEdge[],
     startId: number,
 ) {
     const reachable = new Set<number>();
@@ -37,19 +37,19 @@ export function getExecutionOrder(
         if (workflowId === undefined || reachable.has(workflowId)) continue;
 
         reachable.add(workflowId);
-        connections
-            .filter((connection) => connection.source === workflowId)
-            .forEach((connection) => pending.push(connection.target));
+        edges
+            .filter((edge) => edge.source === workflowId)
+            .forEach((edge) => pending.push(edge.target));
     }
 
-    const startWorkflow = workflows.find((workflow) => workflow.id === startId);
-    const remainingWorkflows = workflows
-        .filter((workflow) => reachable.has(workflow.id) && workflow.id !== startId)
+    const startNode = nodes.find((node) => node.id === startId);
+    const remainingNodes = nodes
+        .filter((node) => reachable.has(node.id) && node.id !== startId)
         .sort((left, right) => left.x - right.x || left.y - right.y);
 
-    return startWorkflow ? [startWorkflow, ...remainingWorkflows] : remainingWorkflows;
+    return startNode ? [startNode, ...remainingNodes] : remainingNodes;
 }
 
-export function getNextWorkflowId(workflows: Workflow[]) {
-    return Math.max(0, ...workflows.map((workflow) => workflow.id)) + 1;
+export function getNextNodeId(nodes: WorkflowNode[]) {
+    return Math.max(0, ...nodes.map((node) => node.id)) + 1;
 }
