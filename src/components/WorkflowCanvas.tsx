@@ -33,6 +33,7 @@ type WorkflowCanvasProps = {
     onMoveWorkflow: (workflowId: number, x: number, y: number) => void;
     onUpdateWorkflow: (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => void;
     onConnectWorkflows: (source: number, target: number) => void;
+    onDeleteConnections: (connectionIds: string[]) => void;
 };
 
 function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
@@ -128,9 +129,11 @@ export default function WorkflowCanvas({
     onMoveWorkflow,
     onUpdateWorkflow,
     onConnectWorkflows,
+    onDeleteConnections,
 }: WorkflowCanvasProps) {
     const canvasRef = useRef<HTMLElement>(null);
     const reactFlowRef = useRef<ReactFlowInstance<WorkflowNode>>(null);
+    const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
     const initialNodes = useMemo<WorkflowNode[]>(
         () =>
             workflows.map((workflow) => ({
@@ -164,14 +167,26 @@ export default function WorkflowCanvas({
         return () => resizeObserver.disconnect();
     }, []);
 
-    const edges: Edge[] = connections.map((connection) => ({
-        id: connection.id,
-        source: String(connection.source),
-        target: String(connection.target),
-        type: 'smoothstep',
-        style: { stroke: '#2563eb', strokeWidth: 2 },
-        markerEnd: { type: MarkerType.ArrowClosed, color: '#facc15' },
-    }));
+    const edges: Edge[] = connections.map((connection) => {
+        const selected = connection.id === selectedConnectionId;
+
+        return {
+            id: connection.id,
+            source: String(connection.source),
+            target: String(connection.target),
+            type: 'smoothstep',
+            selected,
+            interactionWidth: 24,
+            style: {
+                stroke: selected ? '#2563eb' : '#c9cdd3',
+                strokeWidth: 2,
+            },
+            markerEnd: {
+                type: MarkerType.ArrowClosed,
+                color: selected ? '#2563eb' : '#c9cdd3',
+            },
+        };
+    });
 
     const handleConnect = (connection: Connection) => {
         if (!connection.source || !connection.target) {
@@ -196,7 +211,14 @@ export default function WorkflowCanvas({
                     )
                 }
                 onConnect={handleConnect}
+                onEdgeClick={(_, edge) => setSelectedConnectionId(edge.id)}
+                onEdgesDelete={(deletedEdges) => {
+                    setSelectedConnectionId(null);
+                    onDeleteConnections(deletedEdges.map((edge) => edge.id));
+                }}
+                deleteKeyCode="Delete"
                 onNodeClick={(_, node) => {
+                    setSelectedConnectionId(null);
                     const workflow = workflows.find(
                         (candidate) => candidate.id === Number(node.id),
                     );
@@ -205,18 +227,19 @@ export default function WorkflowCanvas({
                         onSelectWorkflow(workflow);
                     }
                 }}
+                onPaneClick={() => setSelectedConnectionId(null)}
                 onInit={(instance) => {
                     reactFlowRef.current = instance;
                 }}
                 defaultEdgeOptions={{
                     type: 'smoothstep',
-                    style: { stroke: '#2563eb', strokeWidth: 2 },
+                    style: { stroke: '#c9cdd3', strokeWidth: 2 },
                     markerEnd: {
                         type: MarkerType.ArrowClosed,
-                        color: '#facc15',
+                        color: '#c9cdd3',
                     },
                 }}
-                connectionLineStyle={{ stroke: '#2563eb', strokeWidth: 2 }}
+                connectionLineStyle={{ stroke: '#c9cdd3', strokeWidth: 2 }}
                 fitView
                 minZoom={0.5}
                 maxZoom={1.5}

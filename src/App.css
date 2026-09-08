@@ -194,6 +194,11 @@
   border-radius: 8px;
 }
 
+.workflow-canvas .react-flow__edge.selected path {
+  stroke: #2563eb;
+  stroke-width: 2;
+}
+
 .workflow-node {
   position: relative;
   width: 190px;

@@ -89,6 +89,13 @@ export default function App() {
         );
     }, [connections]);
 
+    const handleDeleteConnections = useCallback((connectionIds: string[]) => {
+        const ids = new Set(connectionIds);
+        setConnections((currentConnections) => currentConnections.filter(
+            (connection) => !ids.has(connection.id),
+        ));
+    }, []);
+
     return (
         <main>
             <h1>Dashboard</h1>
@@ -115,6 +122,7 @@ export default function App() {
                     onMoveWorkflow={handleMoveWorkflow}
                     onUpdateWorkflow={handleUpdateWorkflow}
                     onConnectWorkflows={handleConnectWorkflows}
+                    onDeleteConnections={handleDeleteConnections}
                 />
 
                 {selectedWorkflow ? (
