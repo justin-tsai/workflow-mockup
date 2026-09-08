@@ -5,6 +5,7 @@ import type { Workflow } from '../types/workflow';
 export type WorkflowNodeData = {
     workflow: Workflow;
     isStart: boolean;
+    onSelectWorkflow: (workflow: Workflow) => void;
     onUpdateWorkflow: (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => void;
 };
 
@@ -32,7 +33,10 @@ export default function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>
     const statusClass = data.workflow.status ? `workflow-node-${data.workflow.status}` : '';
 
     return (
-        <div className={`workflow-node ${selected ? 'workflow-node-selected' : ''} ${data.isStart ? 'workflow-node-start' : ''} ${statusClass}`}>
+        <div
+            className={`workflow-node ${selected ? 'workflow-node-selected' : ''} ${data.isStart ? 'workflow-node-start' : ''} ${statusClass}`}
+            onClick={() => data.onSelectWorkflow(data.workflow)}
+        >
             <Handle type="target" position={Position.Left} className="workflow-handle workflow-handle-input" aria-label={`Connect into ${data.workflow.name}`} />
             {editingField === 'name' ? (
                 <input

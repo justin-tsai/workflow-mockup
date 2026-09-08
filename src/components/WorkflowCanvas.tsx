@@ -12,11 +12,6 @@ import {
 import { useEffect, useMemo, useRef } from 'react';
 import type { Workflow, WorkflowConnection } from '../types/workflow';
 import WorkflowNode, { type WorkflowNode as WorkflowNodeType } from './WorkflowNode';
-import SmartEdge, {
-    DEFAULT_NODE_HEIGHT,
-    DEFAULT_NODE_WIDTH,
-    EDGE_CLEARANCE,
-} from './SmartEdge';
 
 type WorkflowCanvasProps = {
     workflows: Workflow[];
@@ -34,7 +29,6 @@ type WorkflowCanvasProps = {
 };
 
 const nodeTypes: NodeTypes = { workflow: WorkflowNode };
-const edgeTypes = { smart: SmartEdge };
 
 export default function WorkflowCanvas({
     workflows,
@@ -57,24 +51,17 @@ export default function WorkflowCanvas({
             id: String(workflow.id),
             type: 'workflow',
             position: { x: workflow.x, y: workflow.y },
-            data: {
-                workflow,
-                isStart: workflow.id === startWorkflowId,
-                onUpdateWorkflow,
-            },
+                data: {
+                    workflow,
+                    isStart: workflow.id === startWorkflowId,
+                    onSelectWorkflow,
+                    onUpdateWorkflow,
+                },
             selected: workflow.id === selectedWorkflowId,
         })),
-        [onUpdateWorkflow, selectedWorkflowId, startWorkflowId, workflows],
+        [onSelectWorkflow, onUpdateWorkflow, selectedWorkflowId, startWorkflowId, workflows],
     );
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-
-    const getNodeSize = (workflowId: number) => {
-        const node = nodes.find((candidate) => candidate.id === String(workflowId));
-        return {
-            width: node?.measured?.width ?? node?.width ?? DEFAULT_NODE_WIDTH,
-            height: node?.measured?.height ?? node?.height ?? DEFAULT_NODE_HEIGHT,
-        };
-    };
 
     useEffect(() => setNodes(initialNodes), [initialNodes, setNodes]);
 
@@ -90,38 +77,12 @@ export default function WorkflowCanvas({
 
     const edges: Edge[] = connections.map((connection) => {
         const selected = connection.id === selectedConnectionId;
-        const sourceWorkflow = workflows.find((workflow) => workflow.id === connection.source);
-        const targetWorkflow = workflows.find((workflow) => workflow.id === connection.target);
-        const sourceSize = getNodeSize(connection.source);
-        const targetSize = getNodeSize(connection.target);
-        const routeStart = Math.min(sourceWorkflow?.x ?? 0, targetWorkflow?.x ?? 0);
-        const routeEnd = Math.max(
-            (sourceWorkflow?.x ?? 0) + sourceSize.width,
-            (targetWorkflow?.x ?? 0) + targetSize.width,
-        );
-        const routeTop = Math.min(sourceWorkflow?.y ?? 0, targetWorkflow?.y ?? 0);
-        const routeBottom = Math.max(
-            (sourceWorkflow?.y ?? 0) + sourceSize.height,
-            (targetWorkflow?.y ?? 0) + targetSize.height,
-        );
-        const blockingWorkflows = workflows.filter((workflow) =>
-            workflow.id !== connection.source &&
-            workflow.id !== connection.target &&
-            workflow.x < routeEnd &&
-            workflow.x + getNodeSize(workflow.id).width > routeStart &&
-            workflow.y < routeBottom &&
-            workflow.y + getNodeSize(workflow.id).height > routeTop,
-        );
-        const routeY = blockingWorkflows.length > 0
-            ? Math.max(...blockingWorkflows.map((workflow) => workflow.y + getNodeSize(workflow.id).height)) + EDGE_CLEARANCE
-            : undefined;
 
         return {
             id: connection.id,
             source: String(connection.source),
             target: String(connection.target),
-            type: 'smart',
-            data: { routeY },
+            type: 'smoothstep',
             selected,
             interactionWidth: 24,
             style: { stroke: selected ? '#2563eb' : '#c9cdd3', strokeWidth: 2 },
@@ -141,7 +102,6 @@ export default function WorkflowCanvas({
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
                 onNodesChange={onNodesChange}
                 onNodeDragStop={(_, node) => onMoveWorkflow(Number(node.id), node.position.x, node.position.y)}
                 onConnect={handleConnect}
