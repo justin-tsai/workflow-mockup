@@ -13,6 +13,11 @@ type ConnectionError = {
     message: string;
 };
 
+type InspectorSelection =
+    | { type: 'node'; id: number }
+    | { type: 'connection'; id: string }
+    | null;
+
 export default function App() {
     const [workflowItems, setWorkflowItems] = useState<Workflow[]>(initialWorkflows);
     const [connections, setConnections] = useState<WorkflowConnection[]>(() =>
@@ -22,8 +27,7 @@ export default function App() {
             target: initialWorkflows[index + 1].id,
         })),
     );
-    const [selectedWorkflowId, setSelectedWorkflowId] = useState<number | null>(null);
-    const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
+    const [inspectorSelection, setInspectorSelection] = useState<InspectorSelection>(null);
     const [startWorkflowId, setStartWorkflowId] = useState<number | null>(initialWorkflows[0]?.id ?? null);
     const [connectionError, setConnectionError] = useState<ConnectionError | null>(null);
 
@@ -33,6 +37,8 @@ export default function App() {
         const timeout = window.setTimeout(() => setConnectionError(null), 3500);
         return () => window.clearTimeout(timeout);
     }, [connectionError]);
+    const selectedWorkflowId = inspectorSelection?.type === 'node' ? inspectorSelection.id : null;
+    const selectedConnectionId = inspectorSelection?.type === 'connection' ? inspectorSelection.id : null;
     const selectedWorkflow = useMemo(
         () => workflowItems.find((workflow) => workflow.id === selectedWorkflowId) ?? null,
         [selectedWorkflowId, workflowItems],
@@ -108,7 +114,11 @@ export default function App() {
         setConnections((currentConnections) => currentConnections.filter(
             (connection) => !ids.has(connection.id),
         ));
-        setSelectedConnectionId((currentId) => currentId !== null && ids.has(currentId) ? null : currentId);
+        setInspectorSelection((currentSelection) =>
+            currentSelection?.type === 'connection' && ids.has(currentSelection.id)
+                ? null
+                : currentSelection,
+        );
     }, []);
 
     const handleDeleteWorkflows = useCallback((workflowIds: number[]) => {
@@ -126,10 +136,24 @@ export default function App() {
         setConnections((currentConnections) => currentConnections.filter(
             (connection) => !ids.has(connection.source) && !ids.has(connection.target),
         ));
-        setSelectedWorkflowId((currentSelectedId) =>
-            currentSelectedId !== null && ids.has(currentSelectedId) ? null : currentSelectedId,
-        );
-    }, []);
+        setInspectorSelection((currentSelection) => {
+            if (currentSelection?.type === 'node' && ids.has(currentSelection.id)) {
+                return null;
+            }
+
+            if (
+                currentSelection?.type === 'connection' &&
+                connections.some(
+                    (connection) => connection.id === currentSelection.id &&
+                        (ids.has(connection.source) || ids.has(connection.target)),
+                )
+            ) {
+                return null;
+            }
+
+            return currentSelection;
+        });
+    }, [connections]);
 
     const handleDeleteWorkflow = useCallback((workflowId: number) => {
         handleDeleteWorkflows([workflowId]);
@@ -170,8 +194,7 @@ export default function App() {
                     selectedWorkflowId={selectedWorkflowId}
                     startWorkflowId={startWorkflowId}
                     onSelectWorkflow={(workflow) => {
-                        setSelectedConnectionId(null);
-                        setSelectedWorkflowId(workflow.id);
+                        setInspectorSelection({ type: 'node', id: workflow.id });
                     }}
                     onMoveWorkflow={handleMoveWorkflow}
                     onUpdateWorkflow={handleUpdateWorkflow}
@@ -180,8 +203,9 @@ export default function App() {
                     onDeleteWorkflows={handleDeleteWorkflowNodes}
                     selectedConnectionId={selectedConnectionId}
                     onSelectConnection={(connectionId) => {
-                        setSelectedConnectionId(connectionId);
-                        if (connectionId) setSelectedWorkflowId(null);
+                        setInspectorSelection(
+                            connectionId ? { type: 'connection', id: connectionId } : null,
+                        );
                     }}
                 />
 
