@@ -5,7 +5,12 @@ type WorkflowToolbarProps = {
     onCreate: () => void;
 };
 
-export default function WorkflowToolbar({ isRunning, canRun, onRun, onCreate }: WorkflowToolbarProps) {
+export default function WorkflowToolbar({
+    isRunning,
+    canRun,
+    onRun,
+    onCreate,
+}: WorkflowToolbarProps) {
     return (
         <div className="workflow-actions">
             <button type="button" onClick={onRun} disabled={isRunning || !canRun}>

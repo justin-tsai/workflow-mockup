@@ -1,11 +1,16 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import ExecutionDetails from './components/ExecutionDetails';
 import WorkflowCanvas from './components/WorkflowCanvas';
 import WorkflowToolbar from './components/WorkflowToolbar';
 import { workflows as initialWorkflows } from './data/workflows';
 import { useWorkflowExecution } from './hooks/useWorkflowExecution';
 import type { Workflow, WorkflowConnection } from './types/workflow';
-import { getNextWorkflowId } from './utils/workflowGraph';
+import { getNextWorkflowId, wouldCreateCycle } from './utils/workflowGraph';
+
+type ConnectionError = {
+    id: number;
+    message: string;
+};
 
 export default function App() {
     const [workflowItems, setWorkflowItems] = useState<Workflow[]>(initialWorkflows);
@@ -18,6 +23,14 @@ export default function App() {
     );
     const [selectedWorkflowId, setSelectedWorkflowId] = useState<number | null>(null);
     const [startWorkflowId, setStartWorkflowId] = useState<number | null>(initialWorkflows[0]?.id ?? null);
+    const [connectionError, setConnectionError] = useState<ConnectionError | null>(null);
+
+    useEffect(() => {
+        if (!connectionError) return;
+
+        const timeout = window.setTimeout(() => setConnectionError(null), 3500);
+        return () => window.clearTimeout(timeout);
+    }, [connectionError]);
     const selectedWorkflow = useMemo(
         () => workflowItems.find((workflow) => workflow.id === selectedWorkflowId) ?? null,
         [selectedWorkflowId, workflowItems],
@@ -59,7 +72,14 @@ export default function App() {
     );
 
     const handleConnectWorkflows = useCallback((source: number, target: number) => {
-        if (source === target) return;
+        if (wouldCreateCycle(connections, source, target)) {
+            setConnectionError({
+                id: Date.now(),
+                message: 'Cannot connect these tasks because it would create a cycle.',
+            });
+            return;
+        }
+
         setConnections((currentConnections) =>
             currentConnections.some(
                 (connection) => connection.source === source && connection.target === target,
@@ -67,7 +87,7 @@ export default function App() {
                 ? currentConnections
                 : [...currentConnections, { id: `${source}-${target}`, source, target }],
         );
-    }, []);
+    }, [connections]);
 
     return (
         <main>
@@ -78,6 +98,12 @@ export default function App() {
                 onRun={() => runWorkflow(startWorkflowId)}
                 onCreate={handleCreateWorkflow}
             />
+
+            {connectionError && (
+                <div key={connectionError.id} className="workflow-toast" role="alert">
+                    {connectionError.message}
+                </div>
+            )}
 
             <div className="dashboard">
                 <WorkflowCanvas

@@ -136,6 +136,21 @@ main {
   margin-bottom: 24px;
 }
 
+.workflow-toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 10;
+  max-width: min(360px, calc(100vw - 48px));
+  padding: 14px 16px;
+  color: #fff;
+  background: #b91c1c;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .workflow-actions button,
 .start-node-button {
   padding: 9px 14px;

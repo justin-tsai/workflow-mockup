@@ -1,5 +1,29 @@
 import type { Workflow, WorkflowConnection } from '../types/workflow';
 
+export function wouldCreateCycle(
+    connections: WorkflowConnection[],
+    source: number,
+    target: number,
+) {
+    if (source === target) return true;
+
+    const pending = [target];
+    const visited = new Set<number>();
+
+    while (pending.length > 0) {
+        const workflowId = pending.pop();
+        if (workflowId === undefined || visited.has(workflowId)) continue;
+        if (workflowId === source) return true;
+
+        visited.add(workflowId);
+        connections
+            .filter((connection) => connection.source === workflowId)
+            .forEach((connection) => pending.push(connection.target));
+    }
+
+    return false;
+}
+
 export function getExecutionOrder(
     workflows: Workflow[],
     connections: WorkflowConnection[],
