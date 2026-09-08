@@ -1,13 +1,16 @@
 import {
+    BaseEdge,
     Background,
     Controls,
     Handle,
     MarkerType,
     Position,
     ReactFlow,
+    getSmoothStepPath,
     useNodesState,
     type Connection,
     type Edge,
+    type EdgeProps,
     type Node,
     type NodeProps,
     type NodeTypes,
@@ -23,6 +26,14 @@ type WorkflowNodeData = {
 };
 
 type WorkflowNode = Node<WorkflowNodeData, 'workflow'>;
+type SmartEdgeData = { routeY?: number };
+
+// Keep these fallbacks aligned with the CSS dimensions. Measured React Flow
+// dimensions take over once the nodes have been rendered.
+const DEFAULT_NODE_WIDTH = 190;
+const DEFAULT_NODE_HEIGHT = 112;
+const EDGE_CLEARANCE = 28;
+const EDGE_EXIT_OFFSET = 24;
 
 type WorkflowCanvasProps = {
     workflows: Workflow[];
@@ -129,8 +140,51 @@ function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
     );
 }
 
+function SmartEdge({
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    markerEnd,
+    style,
+    data,
+}: EdgeProps<Edge<SmartEdgeData>>) {
+    if (!data?.routeY) {
+        const [path] = getSmoothStepPath({
+            sourceX,
+            sourceY,
+            sourcePosition: Position.Right,
+            targetX,
+            targetY,
+            targetPosition: Position.Left,
+            borderRadius: 12,
+            offset: 24,
+        });
+
+        return <BaseEdge path={path} markerEnd={markerEnd} style={style} />;
+    }
+
+    const isForward = targetX >= sourceX;
+    const exitX = sourceX + (isForward ? EDGE_EXIT_OFFSET : -EDGE_EXIT_OFFSET);
+    const entryX = targetX - (isForward ? EDGE_EXIT_OFFSET : -EDGE_EXIT_OFFSET);
+    const path = [
+        `M ${sourceX},${sourceY}`,
+        `L ${exitX},${sourceY}`,
+        `L ${exitX},${data.routeY}`,
+        `L ${entryX},${data.routeY}`,
+        `L ${entryX},${targetY}`,
+        `L ${targetX},${targetY}`,
+    ].join(' ');
+
+    return <BaseEdge path={path} markerEnd={markerEnd} style={style} />;
+}
+
 const nodeTypes: NodeTypes = {
     workflow: WorkflowNode,
+};
+
+const edgeTypes = {
+    smart: SmartEdge,
 };
 
 export default function WorkflowCanvas({
@@ -164,6 +218,15 @@ export default function WorkflowCanvas({
     );
     const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
+    const getNodeSize = (workflowId: number) => {
+        const node = nodes.find((candidate) => candidate.id === String(workflowId));
+
+        return {
+            width: node?.measured?.width ?? node?.width ?? DEFAULT_NODE_WIDTH,
+            height: node?.measured?.height ?? node?.height ?? DEFAULT_NODE_HEIGHT,
+        };
+    };
+
     useEffect(() => {
         setNodes(initialNodes);
     }, [initialNodes, setNodes]);
@@ -182,12 +245,40 @@ export default function WorkflowCanvas({
 
     const edges: Edge[] = connections.map((connection) => {
         const selected = connection.id === selectedConnectionId;
+        const sourceWorkflow = workflows.find((workflow) => workflow.id === connection.source);
+        const targetWorkflow = workflows.find((workflow) => workflow.id === connection.target);
+        const sourceSize = getNodeSize(connection.source);
+        const targetSize = getNodeSize(connection.target);
+        const routeStart = Math.min(sourceWorkflow?.x ?? 0, targetWorkflow?.x ?? 0);
+        const routeEnd = Math.max(
+            (sourceWorkflow?.x ?? 0) + sourceSize.width,
+            (targetWorkflow?.x ?? 0) + targetSize.width,
+        );
+        const routeTop = Math.min(sourceWorkflow?.y ?? 0, targetWorkflow?.y ?? 0);
+        const routeBottom = Math.max(
+            (sourceWorkflow?.y ?? 0) + sourceSize.height,
+            (targetWorkflow?.y ?? 0) + targetSize.height,
+        );
+        const blockingWorkflows = workflows.filter((workflow) =>
+            workflow.id !== connection.source &&
+            workflow.id !== connection.target &&
+            workflow.x < routeEnd &&
+            workflow.x + getNodeSize(workflow.id).width > routeStart &&
+            workflow.y < routeBottom &&
+            workflow.y + getNodeSize(workflow.id).height > routeTop,
+        );
+        const routeY = blockingWorkflows.length > 0
+            ? Math.max(...blockingWorkflows.map((workflow) =>
+                workflow.y + getNodeSize(workflow.id).height,
+            )) + EDGE_CLEARANCE
+            : undefined;
 
         return {
             id: connection.id,
             source: String(connection.source),
             target: String(connection.target),
-            type: 'smoothstep',
+            type: 'smart',
+            data: { routeY },
             selected,
             interactionWidth: 24,
             style: {
@@ -215,6 +306,7 @@ export default function WorkflowCanvas({
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 onNodesChange={onNodesChange}
                 onNodeDragStop={(_, node) =>
                     onMoveWorkflow(

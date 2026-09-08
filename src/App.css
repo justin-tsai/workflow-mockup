@@ -16,8 +16,8 @@
 
 .workflow-node {
   position: relative;
-  width: 190px;
-  height: 112px;
+  width: var(--workflow-node-width, 190px);
+  height: var(--workflow-node-height, 112px);
   padding: 16px;
   box-sizing: border-box;
   cursor: grab;
@@ -55,7 +55,7 @@
 }
 @media (max-width: 600px) {
   .workflow-canvas { height: 52svh; min-height: 330px; border-radius: 8px; }
-  .workflow-node { width: 178px; height: 108px; padding: 14px; }
+  .workflow-node { --workflow-node-width: 178px; --workflow-node-height: 108px; padding: 14px; }
   .workflow-node strong { font-size: 14px; }
   .workflow-canvas .react-flow__controls { transform: scale(.9); transform-origin: bottom left; }
 }
