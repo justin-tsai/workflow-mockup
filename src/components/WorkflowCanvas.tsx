@@ -112,11 +112,6 @@ export default function WorkflowCanvas({
                 }}
                 onNodesDelete={(deletedNodes) => onDeleteWorkflows(deletedNodes.map((node) => Number(node.id)))}
                 deleteKeyCode="Delete"
-                onNodeClick={(_, node) => {
-                    onSelectConnection(null);
-                    const workflow = workflows.find((candidate) => candidate.id === Number(node.id));
-                    if (workflow) onSelectWorkflow(workflow);
-                }}
                 onPaneClick={() => onSelectConnection(null)}
                 onInit={(instance) => { reactFlowRef.current = instance; }}
                 defaultEdgeOptions={{

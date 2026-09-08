@@ -35,7 +35,7 @@ export default function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>
     return (
         <div
             className={`workflow-node ${selected ? 'workflow-node-selected' : ''} ${data.isStart ? 'workflow-node-start' : ''} ${statusClass}`}
-            onClick={() => data.onSelectWorkflow(data.workflow)}
+            onPointerDown={() => data.onSelectWorkflow(data.workflow)}
         >
             <Handle type="target" position={Position.Left} className="workflow-handle workflow-handle-input" aria-label={`Connect into ${data.workflow.name}`} />
             {editingField === 'name' ? (
