@@ -6,7 +6,7 @@ export const workflows: Workflow[] = [
         name: 'First task',
         status: null,
         description: 'This is the first task!',
-        x: -300,
+        x: -225,
         y: 100,
     },
     {
@@ -22,7 +22,7 @@ export const workflows: Workflow[] = [
         name: 'Third task',
         status: null,
         description: 'This is the third task...',
-        x: 300,
+        x: 225,
         y: 100,
     },
 ];

@@ -194,6 +194,8 @@ main {
 .execution-details dt { color: var(--muted); font-size: .8rem; font-weight: 700; }
 .execution-details dd { min-width: 0; margin: 0; color: var(--ink); overflow-wrap: anywhere; }
 .execution-details button { margin-top: 12px; color: #fff; background: var(--danger); border-color: var(--danger); }
+.execution-details .start-node-button { color: #fff; background: var(--blue); border-color: var(--blue); }
+.execution-details .start-node-button:hover:not(:disabled) { background: var(--blue-dark); border-color: var(--blue-dark); }
 .execution-details .delete-node-button:hover:not(:disabled) { background: #991b1b; border-color: #991b1b; }
 
 @media (max-width: 900px) {
