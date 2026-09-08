@@ -1,7 +1,7 @@
 import type { WorkflowStatus } from '../types/workflow';
 
 type StatusBadgeProps = {
-    status?: WorkflowStatus;
+    status: WorkflowStatus | null;
 };
 
 export default function StatusBadge({ status }: StatusBadgeProps) {

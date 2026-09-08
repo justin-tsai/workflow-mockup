@@ -7,6 +7,7 @@ type ExecutionDetailsProps = {
     workflow: Workflow;
     onRetryWorkflow: (workflowId: number) => void;
     isStartNode: boolean;
+    isRunning: boolean;
     onSetStartNode: (workflowId: number) => void;
 };
 
@@ -14,6 +15,7 @@ export default function ExecutionDetails({
                                              workflow,
                                              onRetryWorkflow,
                                              isStartNode,
+                                             isRunning,
                                              onSetStartNode,
                                          }: ExecutionDetailsProps) {
     return (
@@ -26,13 +28,15 @@ export default function ExecutionDetails({
 
                 <div className="execution-details__actions">
                     <StatusBadge status={workflow.status} />
-                    <button
-                        type="button"
-                        className="start-node-button"
-                        onClick={() => onSetStartNode(workflow.id)}
-                    >
-                        {isStartNode ? 'Start node' : 'Set as start node'}
-                    </button>
+                    {!isStartNode && !isRunning && (
+                        <button
+                            type="button"
+                            className="start-node-button"
+                            onClick={() => onSetStartNode(workflow.id)}
+                        >
+                            Set as start node
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -42,10 +46,12 @@ export default function ExecutionDetails({
                     <dd>{workflow.id}</dd>
                 </div>
 
-                <div>
-                    <dt>Started</dt>
-                    <dd>{workflow.startedAt}</dd>
-                </div>
+                {workflow.startedAt && (
+                    <div>
+                        <dt>Started</dt>
+                        <dd>{workflow.startedAt}</dd>
+                    </div>
+                )}
 
                 <div>
                     <dt>Description</dt>

@@ -3,15 +3,16 @@ export type WorkflowStatus =
     | 'queued'
     | 'running'
     | 'completed'
-    | 'failed';
+    | 'failed'
+    | 'blocked';
 
 export type Workflow = {
     id: number;
     name: string;
-    status?: WorkflowStatus;
+    status: WorkflowStatus | null;
     description: string;
-    duration: number;
-    startedAt: string;
+    duration?: number;
+    startedAt?: string;
     x: number;
     y: number;
 };
