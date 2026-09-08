@@ -49,6 +49,15 @@ export default function App() {
         ));
     }, []);
 
+    const handleUpdateWorkflow = useCallback(
+        (workflowId: number, updates: Partial<Pick<Workflow, 'name' | 'description'>>) => {
+            setWorkflowItems((currentWorkflows) => currentWorkflows.map((workflow) =>
+                workflow.id === workflowId ? { ...workflow, ...updates } : workflow,
+            ));
+        },
+        [],
+    );
+
     const handleConnectWorkflows = useCallback((source: number, target: number) => {
         if (source === target) return;
         setConnections((currentConnections) =>
@@ -78,6 +87,7 @@ export default function App() {
                     startWorkflowId={startWorkflowId}
                     onSelectWorkflow={(workflow) => setSelectedWorkflowId(workflow.id)}
                     onMoveWorkflow={handleMoveWorkflow}
+                    onUpdateWorkflow={handleUpdateWorkflow}
                     onConnectWorkflows={handleConnectWorkflows}
                 />
 

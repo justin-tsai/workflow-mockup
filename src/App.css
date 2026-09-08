@@ -219,6 +219,44 @@
   line-height: 1.2;
 }
 
+.workflow-node-description {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  box-sizing: border-box;
+  margin: 8px 0 0;
+  padding: 2px 0;
+  color: #68707d;
+  font-size: 12px;
+  line-height: 1.25;
+  background: #fff;
+  border: 1px solid #c9cdd3;
+  border-radius: 3px;
+  resize: none;
+}
+
+.workflow-node-description:hover,
+.workflow-node-description:focus {
+  padding: 2px 4px;
+  border-color: #2563eb;
+  outline: none;
+}
+
+.workflow-node input {
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  color: inherit;
+  background: #fff;
+  border: 1px solid #2563eb;
+  border-radius: 4px;
+  outline: none;
+}
+
+.workflow-node textarea {
+  font-size: 12px;
+}
+
 .workflow-node span {
   margin-top: 8px;
   color: #68707d;
