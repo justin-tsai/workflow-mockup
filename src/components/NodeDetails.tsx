@@ -80,7 +80,11 @@ export default function NodeDetails({
       {node.status === "failed" && (
         <div>
           <p>This node failed.</p>
-          <button type="button" onClick={() => onRetryWorkflow(node.id)}>
+          <button
+            type="button"
+            disabled={isRunning}
+            onClick={() => onRetryWorkflow(node.id)}
+          >
             Retry node
           </button>
         </div>

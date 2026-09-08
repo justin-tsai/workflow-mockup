@@ -52,6 +52,7 @@ export function useWorkflowEditor() {
   });
 
   const handleCreateNode = useCallback(() => {
+    if (isRunning) return;
     setWorkflow((current) => {
       const id = getNextNodeId(current.nodes);
       const node: WorkflowNode = {
@@ -64,22 +65,24 @@ export function useWorkflowEditor() {
       };
       return { ...current, nodes: [...current.nodes, node] };
     });
-  }, []);
+  }, [isRunning]);
 
   const handleMoveNode = useCallback((nodeId: number, x: number, y: number) => {
+    if (isRunning) return;
     setWorkflow((current) => ({
       ...current,
       nodes: current.nodes.map((node) =>
         node.id === nodeId ? { ...node, x, y } : node,
       ),
     }));
-  }, []);
+  }, [isRunning]);
 
   const handleUpdateNode = useCallback(
     (
       nodeId: number,
       updates: Partial<Pick<WorkflowNode, "name" | "description">>,
     ) => {
+      if (isRunning) return;
       setWorkflow((current) => ({
         ...current,
         nodes: current.nodes.map((node) =>
@@ -87,11 +90,12 @@ export function useWorkflowEditor() {
         ),
       }));
     },
-    [],
+    [isRunning],
   );
 
   const handleConnectNodes = useCallback(
     (source: number, target: number) => {
+      if (isRunning) return;
       if (wouldCreateCycle(workflow.edges, source, target)) {
         setConnectionError({
           id: Date.now(),
@@ -109,10 +113,11 @@ export function useWorkflowEditor() {
           : [...current.edges, { id: `${source}-${target}`, source, target }],
       }));
     },
-    [workflow.edges],
+    [isRunning, workflow.edges],
   );
 
   const handleDeleteEdges = useCallback((edgeIds: string[]) => {
+    if (isRunning) return;
     const ids = new Set(edgeIds);
     setWorkflow((current) => ({
       ...current,
@@ -121,10 +126,11 @@ export function useWorkflowEditor() {
     setInspectorSelection((selection) =>
       selection?.type === "edge" && ids.has(selection.id) ? null : selection,
     );
-  }, []);
+  }, [isRunning]);
 
   const handleDeleteNodes = useCallback(
     (nodeIds: number[]) => {
+      if (isRunning) return;
       const ids = new Set(nodeIds);
       setWorkflow((current) => {
         const nodes = current.nodes.filter((node) => !ids.has(node.id));
@@ -154,7 +160,7 @@ export function useWorkflowEditor() {
         return selection;
       });
     },
-    [workflow.edges],
+    [isRunning, workflow.edges],
   );
 
   const selectNode = useCallback(
@@ -168,9 +174,11 @@ export function useWorkflowEditor() {
     [],
   );
   const setStartNodeId = useCallback(
-    (nodeId: number) =>
-      setWorkflow((current) => ({ ...current, startNodeId: nodeId })),
-    [],
+    (nodeId: number) => {
+      if (isRunning) return;
+      setWorkflow((current) => ({ ...current, startNodeId: nodeId }));
+    },
+    [isRunning],
   );
 
   return {

@@ -63,12 +63,13 @@ export default function WorkflowCanvas({
         data: {
           node,
           isStart: node.id === startNodeId,
+          isRunning,
           onSelectNode,
           onUpdateNode,
         },
         selected: node.id === selectedNodeId,
       })),
-    [onSelectNode, onUpdateNode, selectedNodeId, startNodeId, workflowNodes],
+    [isRunning, onSelectNode, onUpdateNode, selectedNodeId, startNodeId, workflowNodes],
   );
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 
@@ -109,7 +110,12 @@ export default function WorkflowCanvas({
   };
 
   return (
-    <section ref={canvasRef} className="workflow-canvas">
+    <section
+      ref={canvasRef}
+      className={`workflow-canvas ${isRunning ? "workflow-canvas-locked" : ""}`}
+      aria-busy={isRunning}
+    >
+      {isRunning && <div className="workflow-lock-badge">Workflow locked while running</div>}
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -119,6 +125,8 @@ export default function WorkflowCanvas({
           onMoveNode(Number(node.id), node.position.x, node.position.y)
         }
         onConnect={handleConnect}
+        nodesDraggable={!isRunning}
+        nodesConnectable={!isRunning}
         onEdgeClick={(_, edge) => onSelectEdge(edge.id)}
         onEdgesDelete={(deletedEdges) => {
           if (isRunning) return;

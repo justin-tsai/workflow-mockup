@@ -11,35 +11,35 @@ export default function App() {
   return (
     <>
       <main>
-      <header className="app-header">
-        <div>
-          <p className="app-eyebrow">Workflow builder</p>
-          <h1>Dashboard</h1>
-        </div>
-        <p className="app-count">
-          {editor.nodes.length} {editor.nodes.length === 1 ? "node" : "nodes"}
-        </p>
-      </header>
+        <header className="app-header">
+          <div>
+            <p className="app-eyebrow">Workflow builder</p>
+            <h1>Dashboard</h1>
+          </div>
+          <p className="app-count">
+            {editor.nodes.length} {editor.nodes.length === 1 ? "node" : "nodes"}
+          </p>
+        </header>
 
-      <WorkflowToolbar
-        isRunning={editor.isRunning}
-        canRun={editor.startNodeId !== null}
-        onRun={() => editor.runWorkflow(editor.startNodeId)}
-        onCreate={editor.handleCreateNode}
-      />
+        <WorkflowToolbar
+          isRunning={editor.isRunning}
+          canRun={editor.startNodeId !== null}
+          onRun={() => editor.runWorkflow(editor.startNodeId)}
+          onCreate={editor.handleCreateNode}
+        />
 
-      {editor.connectionError && (
-        <div
-          key={editor.connectionError.id}
-          className="workflow-toast"
-          role="alert"
-        >
-          {editor.connectionError.message}
-        </div>
-      )}
+        {editor.connectionError && (
+          <div
+            key={editor.connectionError.id}
+            className="workflow-toast"
+            role="alert"
+          >
+            {editor.connectionError.message}
+          </div>
+        )}
 
-      <div className="dashboard">
-        <WorkflowCanvas
+        <div className="dashboard">
+          <WorkflowCanvas
           nodes={editor.nodes}
           edges={editor.edges}
           selectedNodeId={editor.selectedNodeId}
@@ -53,20 +53,21 @@ export default function App() {
           selectedEdgeId={editor.selectedEdgeId}
           onSelectEdge={editor.selectEdge}
           isRunning={editor.isRunning}
-        />
+          />
 
-        {editor.selectedEdge &&
+          {editor.selectedEdge &&
         editor.selectedEdgeSource &&
         editor.selectedEdgeTarget ? (
-          <ConnectionDetails
+            <ConnectionDetails
             source={editor.selectedEdgeSource}
             target={editor.selectedEdgeTarget}
+            isRunning={editor.isRunning}
             onDeleteConnection={() =>
               editor.handleDeleteEdges([editor.selectedEdge!.id])
             }
           />
         ) : editor.selectedNode ? (
-          <NodeDetails
+            <NodeDetails
             node={editor.selectedNode}
             onRetryWorkflow={editor.runWorkflow}
             isStartNode={editor.selectedNode.id === editor.startNodeId}
@@ -74,10 +75,10 @@ export default function App() {
             onSetStartNode={editor.setStartNodeId}
             onDeleteWorkflow={(nodeId) => editor.handleDeleteNodes([nodeId])}
           />
-        ) : (
-          <p>Select a node to view its details.</p>
-        )}
-      </div>
+          ) : (
+            <p>Select a node to view its details.</p>
+          )}
+        </div>
       </main>
       <Analytics />
     </>

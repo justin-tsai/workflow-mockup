@@ -10,6 +10,8 @@
   box-shadow: 0 4px 16px rgb(15 23 42 / 5%);
   touch-action: none;
 }
+.workflow-canvas-locked { cursor: wait; }
+.workflow-lock-badge { position: absolute; top: 12px; left: 50%; z-index: 5; padding: 6px 10px; color: #92400e; background: #fffbeb; border: 1px solid #f59e0b; border-radius: 999px; box-shadow: 0 2px 8px rgb(15 23 42 / 10%); font-size: 12px; font-weight: 700; transform: translateX(-50%); pointer-events: none; white-space: nowrap; }
 .workflow-canvas .react-flow__edge.selected path { stroke: #2563eb; stroke-width: 2; }
 .workflow-canvas .react-flow__controls { overflow: hidden; border: 1px solid #d5dce5; border-radius: 7px; box-shadow: 0 3px 10px rgb(15 23 42 / 8%); }
 .workflow-canvas .react-flow__controls-button { width: 32px; height: 32px; background: #fff; border-bottom-color: #e6ebf0; }
@@ -30,8 +32,9 @@
 }
 .workflow-node:active { cursor: grabbing; }
 .workflow-node strong, .workflow-node span { display: block; line-height: 1.2; }
-.workflow-node strong { color: #1e293b; font-size: 15px; font-weight: 700; }
+.workflow-node strong { display: block; min-width: 0; overflow: hidden; color: #1e293b; font-size: 15px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
 .workflow-node span { margin-top: 8px; color: #68707d; font-size: 13px; text-transform: capitalize; }
+.workflow-node-status { position: absolute; right: 16px; bottom: 12px; left: 16px; margin-top: 0 !important; }
 .workflow-node-description { display: block; width: 100%; min-height: 34px; margin: 8px 0 0; padding: 2px 0; box-sizing: border-box; color: #68707d; font-size: 12px; line-height: 1.25; background: #fff; border: 1px solid #c9cdd3; border-radius: 3px; resize: none; }
 .workflow-node-description:hover, .workflow-node-description:focus { padding: 2px 4px; border-color: #2563eb; outline: none; }
 .workflow-node-description-disabled { pointer-events: none; }
@@ -43,6 +46,7 @@
 .workflow-node-failed { border-color: #dc2626; background: #fef2f2; }
 .workflow-node-blocked { border-color: #9333ea; background: #faf5ff; }
 .workflow-node-queued { border-color: #64748b; background: #f8fafc; }
+.workflow-node-locked { cursor: wait; }
 .workflow-node-start::before { content: 'START'; position: absolute; top: -10px; left: 12px; padding: 2px 6px; color: #1d4ed8; background: #dbeafe; border: 1px solid #2563eb; border-radius: 999px; font-size: 10px; font-weight: 700; line-height: 1.2; letter-spacing: .04em; }
 
 .workflow-handle { position: absolute; top: 50%; width: 12px; height: 12px; padding: 0; box-sizing: border-box; background: #fff; border: 2px solid #64748b; border-radius: 50%; cursor: crosshair; transform: translateY(-50%); transition: border-color 150ms ease, background-color 150ms ease, transform 150ms ease; }

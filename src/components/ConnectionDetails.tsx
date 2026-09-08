@@ -4,12 +4,14 @@ import type { WorkflowNode } from "../types/workflow";
 type ConnectionDetailsProps = {
   source: WorkflowNode;
   target: WorkflowNode;
+  isRunning: boolean;
   onDeleteConnection: () => void;
 };
 
 export default function ConnectionDetails({
   source,
   target,
+  isRunning,
   onDeleteConnection,
 }: ConnectionDetailsProps) {
   return (
@@ -37,6 +39,7 @@ export default function ConnectionDetails({
       <button
         type="button"
         className="delete-node-button"
+        disabled={isRunning}
         onClick={onDeleteConnection}
       >
         Delete connection

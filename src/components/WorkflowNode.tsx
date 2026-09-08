@@ -5,6 +5,7 @@ import type { WorkflowNode as WorkflowNodeModel } from "../types/workflow";
 export type WorkflowNodeData = {
   node: WorkflowNodeModel;
   isStart: boolean;
+  isRunning: boolean;
   onSelectNode: (node: WorkflowNodeModel) => void;
   onUpdateNode: (
     nodeId: number,
@@ -26,13 +27,13 @@ export default function WorkflowNode({
   const [editingDescription, setEditingDescription] = useState(false);
 
   const beginEditing = () => {
-    if (!selected) return;
+    if (!selected || data.isRunning) return;
     setEditingField("name");
     setDraftValue(data.node.name);
   };
 
   const finishEditing = () => {
-    if (!editingField) return;
+    if (!editingField || data.isRunning) return;
     const value = draftValue.trim();
     if (value) data.onUpdateNode(data.node.id, { name: value });
     setEditingField(null);
@@ -44,7 +45,7 @@ export default function WorkflowNode({
 
   return (
     <div
-      className={`workflow-node ${selected ? "workflow-node-selected" : ""} ${data.isStart ? "workflow-node-start" : ""} ${statusClass}`}
+      className={`workflow-node ${selected ? "workflow-node-selected" : ""} ${data.isStart ? "workflow-node-start" : ""} ${data.isRunning ? "workflow-node-locked" : ""} ${statusClass}`}
       onPointerDown={() => data.onSelectNode(data.node)}
     >
       <Handle
@@ -58,6 +59,7 @@ export default function WorkflowNode({
           className="nodrag"
           value={draftValue}
           autoFocus
+          disabled={data.isRunning}
           onChange={(event) => setDraftValue(event.target.value)}
           onBlur={finishEditing}
           onKeyDown={(event) => {
@@ -71,11 +73,11 @@ export default function WorkflowNode({
       <textarea
         className={`workflow-node-description ${selected ? "nodrag" : "workflow-node-description-disabled"}`}
         value={descriptionDraft}
-        readOnly={!selected || !editingDescription}
+        readOnly={!selected || !editingDescription || data.isRunning}
         rows={2}
         onChange={(event) => setDescriptionDraft(event.target.value)}
         onDoubleClick={() => {
-          if (selected) setEditingDescription(true);
+          if (selected && !data.isRunning) setEditingDescription(true);
         }}
         onBlur={() => {
           const value = descriptionDraft.trim();
@@ -97,7 +99,9 @@ export default function WorkflowNode({
           }
         }}
       />
-      {data.node.status && <span>{data.node.status}</span>}
+      {data.node.status && (
+        <span className="workflow-node-status">{data.node.status}</span>
+      )}
       <Handle
         type="source"
         position={Position.Right}
