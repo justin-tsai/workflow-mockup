@@ -4,6 +4,8 @@
 
 A small React and TypeScript workflow editor built with Vite and React Flow. It lets users create and connect tasks, choose a start task, edit task details, run the connected flow, and inspect execution status.
 
+I built this project to strengthen my React and Typescript skills while exploring node-based workflow tools.
+
 ## Screenshots
 
 ### Dashboard
@@ -88,7 +90,7 @@ src/
 ## Current Limitations
 - Workflow execution is simulated
 - Workflows are not saved
-- No Authentication or Permissions
+- No authentication or permissions
 - This is just a React Prototype
 
 ## Next Steps
