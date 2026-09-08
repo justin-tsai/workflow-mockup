@@ -37,14 +37,15 @@ export function useWorkflowExecution({
 
             setIsRunning(true);
             const startedAt = new Date().toLocaleTimeString();
+            const executionIds = new Set(executionOrder.map((workflow) => workflow.id));
             updateWorkflows((currentWorkflows) => currentWorkflows.map((workflow) => ({
                 ...workflow,
-                status: null,
-                startedAt: undefined,
-                duration: undefined,
+                ...(executionIds.has(workflow.id)
+                    ? { status: null, startedAt: undefined, duration: undefined }
+                    : {}),
             })));
 
-            const reachableIds = new Set(executionOrder.map((workflow) => workflow.id));
+            const reachableIds = executionIds;
             const parentIds = new Map<number, number[]>();
             const runStates = new Map<number, RunState>();
             executionOrder.forEach((workflow) => {

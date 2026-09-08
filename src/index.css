@@ -359,6 +359,17 @@ main {
   border-color: #1d4ed8;
 }
 
+.execution-details .delete-node-button {
+  color: #fff;
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.execution-details .delete-node-button:hover:not(:disabled) {
+  background: #b91c1c;
+  border-color: #b91c1c;
+}
+
 /* Workflow dashboard polish */
 body {
   background: #f7f8fa;

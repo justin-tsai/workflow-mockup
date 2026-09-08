@@ -9,6 +9,7 @@ type ExecutionDetailsProps = {
     isStartNode: boolean;
     isRunning: boolean;
     onSetStartNode: (workflowId: number) => void;
+    onDeleteWorkflow: (workflowId: number) => void;
 };
 
 export default function ExecutionDetails({
@@ -17,6 +18,7 @@ export default function ExecutionDetails({
                                              isStartNode,
                                              isRunning,
                                              onSetStartNode,
+                                             onDeleteWorkflow,
                                          }: ExecutionDetailsProps) {
     return (
         <section className="execution-details">
@@ -37,6 +39,14 @@ export default function ExecutionDetails({
                             Set as start node
                         </button>
                     )}
+                    <button
+                        type="button"
+                        className="delete-node-button"
+                        disabled={isRunning}
+                        onClick={() => onDeleteWorkflow(workflow.id)}
+                    >
+                        Delete node
+                    </button>
                 </div>
             </div>
 

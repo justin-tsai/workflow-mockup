@@ -96,6 +96,20 @@ export default function App() {
         ));
     }, []);
 
+    const handleDeleteWorkflow = useCallback((workflowId: number) => {
+        setWorkflowItems((currentWorkflows) => {
+            const remainingWorkflows = currentWorkflows.filter((workflow) => workflow.id !== workflowId);
+            setStartWorkflowId((currentStartId) =>
+                currentStartId === workflowId ? remainingWorkflows[0]?.id ?? null : currentStartId,
+            );
+            return remainingWorkflows;
+        });
+        setConnections((currentConnections) => currentConnections.filter(
+            (connection) => connection.source !== workflowId && connection.target !== workflowId,
+        ));
+        setSelectedWorkflowId(null);
+    }, []);
+
     return (
         <main>
             <header className="app-header">
@@ -136,10 +150,11 @@ export default function App() {
                 {selectedWorkflow ? (
                     <ExecutionDetails
                         workflow={selectedWorkflow}
-                        onRetryWorkflow={(workflowId) => runWorkflow(startWorkflowId ?? workflowId)}
+                        onRetryWorkflow={(workflowId) => runWorkflow(workflowId)}
                         isStartNode={selectedWorkflow.id === startWorkflowId}
                         isRunning={isRunning}
                         onSetStartNode={setStartWorkflowId}
+                        onDeleteWorkflow={handleDeleteWorkflow}
                     />
                 ) : (
                     <p>Select a workflow to view its details.</p>
