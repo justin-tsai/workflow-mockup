@@ -46,6 +46,8 @@ type WorkflowCanvasProps = {
     onConnectWorkflows: (source: number, target: number) => void;
     onDeleteConnections: (connectionIds: string[]) => void;
     onDeleteWorkflows: (workflowIds: number[]) => void;
+    selectedConnectionId: string | null;
+    onSelectConnection: (connectionId: string | null) => void;
 };
 
 function WorkflowNode({ data, selected }: NodeProps<WorkflowNode>) {
@@ -199,10 +201,11 @@ export default function WorkflowCanvas({
     onConnectWorkflows,
     onDeleteConnections,
     onDeleteWorkflows,
+    selectedConnectionId,
+    onSelectConnection,
 }: WorkflowCanvasProps) {
     const canvasRef = useRef<HTMLElement>(null);
     const reactFlowRef = useRef<ReactFlowInstance<WorkflowNode>>(null);
-    const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
     const initialNodes = useMemo<WorkflowNode[]>(
         () =>
             workflows.map((workflow) => ({
@@ -318,9 +321,9 @@ export default function WorkflowCanvas({
                     )
                 }
                 onConnect={handleConnect}
-                onEdgeClick={(_, edge) => setSelectedConnectionId(edge.id)}
+                onEdgeClick={(_, edge) => onSelectConnection(edge.id)}
                 onEdgesDelete={(deletedEdges) => {
-                    setSelectedConnectionId(null);
+                    onSelectConnection(null);
                     onDeleteConnections(deletedEdges.map((edge) => edge.id));
                 }}
                 onNodesDelete={(deletedNodes) => {
@@ -328,7 +331,7 @@ export default function WorkflowCanvas({
                 }}
                 deleteKeyCode="Delete"
                 onNodeClick={(_, node) => {
-                    setSelectedConnectionId(null);
+                    onSelectConnection(null);
                     const workflow = workflows.find(
                         (candidate) => candidate.id === Number(node.id),
                     );
@@ -337,7 +340,7 @@ export default function WorkflowCanvas({
                         onSelectWorkflow(workflow);
                     }
                 }}
-                onPaneClick={() => setSelectedConnectionId(null)}
+                onPaneClick={() => onSelectConnection(null)}
                 onInit={(instance) => {
                     reactFlowRef.current = instance;
                 }}

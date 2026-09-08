@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import ExecutionDetails from './components/ExecutionDetails';
+import NodeDetails from './components/NodeDetails';
+import ConnectionDetails from './components/ConnectionDetails';
 import WorkflowCanvas from './components/WorkflowCanvas';
 import WorkflowToolbar from './components/WorkflowToolbar';
 import { workflows as initialWorkflows } from './data/workflows';
@@ -22,6 +23,7 @@ export default function App() {
         })),
     );
     const [selectedWorkflowId, setSelectedWorkflowId] = useState<number | null>(null);
+    const [selectedConnectionId, setSelectedConnectionId] = useState<string | null>(null);
     const [startWorkflowId, setStartWorkflowId] = useState<number | null>(initialWorkflows[0]?.id ?? null);
     const [connectionError, setConnectionError] = useState<ConnectionError | null>(null);
 
@@ -34,6 +36,18 @@ export default function App() {
     const selectedWorkflow = useMemo(
         () => workflowItems.find((workflow) => workflow.id === selectedWorkflowId) ?? null,
         [selectedWorkflowId, workflowItems],
+    );
+    const selectedConnection = useMemo(
+        () => connections.find((connection) => connection.id === selectedConnectionId) ?? null,
+        [connections, selectedConnectionId],
+    );
+    const selectedConnectionSource = useMemo(
+        () => workflowItems.find((workflow) => workflow.id === selectedConnection?.source) ?? null,
+        [selectedConnection, workflowItems],
+    );
+    const selectedConnectionTarget = useMemo(
+        () => workflowItems.find((workflow) => workflow.id === selectedConnection?.target) ?? null,
+        [selectedConnection, workflowItems],
     );
 
     const { isRunning, runWorkflow } = useWorkflowExecution({
@@ -94,6 +108,7 @@ export default function App() {
         setConnections((currentConnections) => currentConnections.filter(
             (connection) => !ids.has(connection.id),
         ));
+        setSelectedConnectionId((currentId) => currentId !== null && ids.has(currentId) ? null : currentId);
     }, []);
 
     const handleDeleteWorkflows = useCallback((workflowIds: number[]) => {
@@ -154,16 +169,30 @@ export default function App() {
                     connections={connections}
                     selectedWorkflowId={selectedWorkflowId}
                     startWorkflowId={startWorkflowId}
-                    onSelectWorkflow={(workflow) => setSelectedWorkflowId(workflow.id)}
+                    onSelectWorkflow={(workflow) => {
+                        setSelectedConnectionId(null);
+                        setSelectedWorkflowId(workflow.id);
+                    }}
                     onMoveWorkflow={handleMoveWorkflow}
                     onUpdateWorkflow={handleUpdateWorkflow}
                     onConnectWorkflows={handleConnectWorkflows}
                     onDeleteConnections={handleDeleteConnections}
                     onDeleteWorkflows={handleDeleteWorkflowNodes}
+                    selectedConnectionId={selectedConnectionId}
+                    onSelectConnection={(connectionId) => {
+                        setSelectedConnectionId(connectionId);
+                        if (connectionId) setSelectedWorkflowId(null);
+                    }}
                 />
 
-                {selectedWorkflow ? (
-                    <ExecutionDetails
+                {selectedConnection && selectedConnectionSource && selectedConnectionTarget ? (
+                    <ConnectionDetails
+                        source={selectedConnectionSource}
+                        target={selectedConnectionTarget}
+                        onDeleteConnection={() => handleDeleteConnections([selectedConnection.id])}
+                    />
+                ) : selectedWorkflow ? (
+                    <NodeDetails
                         workflow={selectedWorkflow}
                         onRetryWorkflow={(workflowId) => runWorkflow(workflowId)}
                         isStartNode={selectedWorkflow.id === startWorkflowId}
