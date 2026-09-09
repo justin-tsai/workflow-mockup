@@ -46,7 +46,15 @@ export default function WorkflowNode({
   return (
     <div
       className={`workflow-node ${selected ? "workflow-node-selected" : ""} ${data.isStart ? "workflow-node-start" : ""} ${data.isRunning ? "workflow-node-locked" : ""} ${statusClass}`}
-      onPointerDown={() => data.onSelectNode(data.node)}
+      onPointerDown={(event) => {
+        if (
+          event.target instanceof Element &&
+          event.target.closest(".workflow-handle")
+        ) {
+          return;
+        }
+        data.onSelectNode(data.node);
+      }}
     >
       <Handle
         type="target"
